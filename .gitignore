@@ -1,0 +1,7 @@
+.idea/
+node_modules/
+package-lock.json
+.env
+VoiceCast.iml
+.next/
+next-env.d.ts
