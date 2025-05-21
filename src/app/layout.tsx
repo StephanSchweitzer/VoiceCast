@@ -1,11 +1,12 @@
-// src/app/layout.tsx
 import { Inter } from 'next/font/google';
-import './globals.css';
+import './styles/main.css';
+import './styles/theme.css';
 import Navbar from '@/components/layout/Navbar';
 import Sidebar from '@/components/layout/Sidebar';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { SidebarProvider } from '@/contexts/SidebarContext';
+import { Toaster } from 'sonner';
 import { ReactNode } from 'react';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -21,20 +22,24 @@ export default function RootLayout({
     children: ReactNode;
 }) {
     return (
-        <html lang="en">
+        <html lang="en" suppressHydrationWarning>
         <body className={`${inter.className} dark:bg-gray-900 dark:text-white`}>
         <ThemeProvider>
             <AuthProvider>
                 <SidebarProvider>
                     <div className="flex h-screen flex-col">
                         <Navbar />
-                        <div className="flex flex-1 overflow-hidden">
-                            <Sidebar />
-                            <main className="flex-1 overflow-y-auto p-4">
+                        {/* Add top padding to account for fixed navbar */}
+                        <div className="flex flex-1 overflow-hidden mt-16">
+                            {/* Main content takes full width with proper padding */}
+                            <main className="w-full flex-1 overflow-y-auto p-4">
                                 {children}
                             </main>
                         </div>
+                        {/* Sidebar is rendered outside the main layout flow */}
+                        <Sidebar />
                     </div>
+                    <Toaster richColors position="top-center" />
                 </SidebarProvider>
             </AuthProvider>
         </ThemeProvider>

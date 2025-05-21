@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Play, Pause } from "lucide-react";
 
 interface VoicePlayerProps {
     audioUrl: string;
@@ -59,7 +61,6 @@ export default function VoicePlayer({ audioUrl }: VoicePlayerProps) {
         if (!audio) return;
 
         const newTime = parseFloat(e.target.value);
-
         audio.currentTime = newTime;
         setCurrentTime(newTime);
     };
@@ -74,34 +75,31 @@ export default function VoicePlayer({ audioUrl }: VoicePlayerProps) {
     };
 
     return (
-        <div className="rounded-md bg-gray-50 p-4">
+        <div className="rounded-md bg-gray-50 dark:bg-gray-800/50 p-4">
             <audio ref={audioRef} src={audioUrl} preload="metadata" />
-            <div className="flex items-center">
-                <button
-                    type="button"
+            <div className="flex items-center gap-4">
+                <Button
+                    size="icon"
                     onClick={handlePlayPause}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="h-10 w-10 rounded-full flex-shrink-0"
+                    variant="default"
                 >
                     {isPlaying ? (
-                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
+                        <Pause className="h-5 w-5" />
                     ) : (
-                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                        </svg>
+                        <Play className="h-5 w-5 ml-0.5" />
                     )}
-                </button>
-                <div className="ml-4 flex-1">
+                </Button>
+                <div className="flex-1 space-y-1">
                     <input
                         type="range"
                         min="0"
                         max={duration || 0}
                         value={currentTime}
                         onChange={handleTimeChange}
-                        className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
+                        className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700 accent-blue-600 dark:accent-blue-500"
                     />
-                    <div className="mt-1 flex justify-between text-xs text-gray-500">
+                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                         <span>{formatTime(currentTime)}</span>
                         <span>{formatTime(duration)}</span>
                     </div>

@@ -5,3 +5,4 @@ package-lock.json
 VoiceCast.iml
 .next/
 next-env.d.ts
+public/uploads
