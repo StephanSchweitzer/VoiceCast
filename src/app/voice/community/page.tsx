@@ -1,26 +1,34 @@
-'use client';
+import { getServerSession } from 'next-auth/next';
+import { redirect } from 'next/navigation';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/db';
+import CommunityVoicesClient from '@/components/voice/CommunityVoicesClient';
 
-import { ReactNode } from 'react';
-import Navbar from '@/components/layout/Navbar';
-import Sidebar from '@/components/layout/Sidebar';
-import { SidebarProvider } from '@/contexts/SidebarContext';
+export default async function CommunityVoicesPage() {
+    // Server-side session handling
+    const session = await getServerSession(authOptions);
 
-interface LayoutProps {
-    children: ReactNode;
-}
+    if (!session) {
+        redirect('/login');
+    }
 
-export default function Layout({ children }: LayoutProps) {
-    return (
-        <SidebarProvider>
-            <div className="min-h-screen flex flex-col">
-                <Navbar />
-                <div className="flex flex-1 pt-16">
-                    <Sidebar />
-                    <main className="flex-1 overflow-y-auto">
-                        {children}
-                    </main>
-                </div>
-            </div>
-        </SidebarProvider>
-    );
+    // Fetch public voices
+    const publicVoices = await prisma.voice.findMany({
+        where: {
+            isPublic: true
+        },
+        include: {
+            user: {
+                select: {
+                    name: true,
+                    image: true
+                }
+            }
+        },
+        orderBy: {
+            updatedAt: 'desc'
+        }
+    });
+
+    return <CommunityVoicesClient initialVoices={publicVoices} />;
 }

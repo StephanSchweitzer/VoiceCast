@@ -10,6 +10,16 @@ interface VoiceCardProps {
     isOwner?: boolean;
 }
 
+// Helper function to format date consistently
+function formatDate(date: Date | string): string {
+    const d = new Date(date);
+    // Use toISOString and format manually to avoid locale issues
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${month}/${day}/${year}`;
+}
+
 export default function VoiceCard({ voice, isOwner = false }: VoiceCardProps) {
     const router = useRouter();
 
@@ -55,12 +65,12 @@ export default function VoiceCard({ voice, isOwner = false }: VoiceCardProps) {
                 </div>
 
                 <div className="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
-          <span className={`mr-2 rounded-full px-2 py-0.5 ${voice.isPublic ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}`}>
-            {voice.isPublic ? 'Public' : 'Private'}
-          </span>
+                    <span className={`mr-2 rounded-full px-2 py-0.5 ${voice.isPublic ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}`}>
+                        {voice.isPublic ? 'Public' : 'Private'}
+                    </span>
                     <span>
-            Created: {new Date(voice.createdAt).toLocaleDateString()}
-          </span>
+                        Created: {formatDate(voice.createdAt)}
+                    </span>
                 </div>
             </div>
         </Link>
