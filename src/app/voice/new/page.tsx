@@ -55,7 +55,7 @@ export default function CreateVoice() {
             formData.append('audioFile', audioFile);
 
             // Send the request to the API
-            const response = await fetch('/api/voice', {
+            const response = await fetch('/api/voices', {
                 method: 'POST',
                 body: formData,
             });

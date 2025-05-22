@@ -26,7 +26,7 @@ export default function DeleteVoiceButton({ voiceId }: DeleteVoiceButtonProps) {
         setIsDeleting(true);
 
         try {
-            const response = await fetch(`/api/voice/${voiceId}`, {
+            const response = await fetch(`/api/voices/${voiceId}`, {
                 method: 'DELETE',
             });
 

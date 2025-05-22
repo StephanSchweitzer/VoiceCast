@@ -7,6 +7,73 @@ import { join } from 'path';
 import { randomUUID } from 'crypto';
 import fs from 'fs/promises';
 
+// GET - Fetch voices
+export async function GET(request: NextRequest) {
+    const session = await getServerSession(authOptions);
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type'); // 'user', 'public', or 'all'
+
+    try {
+        let whereClause = {};
+
+        if (type === 'user') {
+            // User's own voices - requires authentication
+            if (!session) {
+                return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+            }
+            whereClause = { userId: session.user.id };
+        } else if (type === 'public') {
+            // Public voices only
+            whereClause = { isPublic: true };
+        } else {
+            // All accessible voices (user's own + public)
+            if (session) {
+                whereClause = {
+                    OR: [
+                        { userId: session.user.id },
+                        { isPublic: true }
+                    ]
+                };
+            } else {
+                whereClause = { isPublic: true };
+            }
+        }
+
+        const voices = await prisma.voice.findMany({
+            where: whereClause,
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                isPublic: true,
+                audioSample: true,
+                createdAt: true,
+                updatedAt: true,
+                userId: true,
+                // Include user info for public voices
+                user: type === 'public' ? {
+                    select: {
+                        name: true,
+                        image: true
+                    }
+                } : false
+            },
+            orderBy: {
+                updatedAt: 'desc'
+            }
+        });
+
+        return NextResponse.json(voices);
+    } catch (error) {
+        console.error('Error fetching voices:', error);
+        return NextResponse.json(
+            { message: 'Failed to fetch voices' },
+            { status: 500 }
+        );
+    }
+}
+
+// POST - Create new voice
 export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
@@ -60,10 +127,20 @@ export async function POST(request: NextRequest) {
                 isPublic,
                 audioSample: `/uploads/${filename}`,
                 userId: session.user.id
+            },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                isPublic: true,
+                audioSample: true,
+                createdAt: true,
+                updatedAt: true,
+                userId: true
             }
         });
 
-        return NextResponse.json(voice);
+        return NextResponse.json(voice, { status: 201 });
     } catch (error) {
         console.error('Error creating voice:', error);
         return NextResponse.json(
