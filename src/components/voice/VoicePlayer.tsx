@@ -6,24 +6,48 @@ import { Play, Pause } from "lucide-react";
 
 interface VoicePlayerProps {
     audioUrl: string;
+    recordedDuration?: number; // Duration in seconds - NEW PROP
 }
 
-export default function VoicePlayer({ audioUrl }: VoicePlayerProps) {
+export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerProps) {
     const [isPlaying, setIsPlaying] = useState(false);
-    const [duration, setDuration] = useState(0);
+    const [duration, setDuration] = useState(recordedDuration || 0);
     const [currentTime, setCurrentTime] = useState(0);
+    const [isLoaded, setIsLoaded] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
+
+    // Reset state when audioUrl changes
+    useEffect(() => {
+        setIsPlaying(false);
+        setDuration(recordedDuration || 0);
+        setCurrentTime(0);
+        setIsLoaded(false);
+    }, [audioUrl, recordedDuration]);
 
     useEffect(() => {
         const audio = audioRef.current;
         if (!audio) return;
 
         const setAudioData = () => {
-            setDuration(audio.duration);
+            // Prefer recordedDuration if available, otherwise use audio duration
+            if (recordedDuration) {
+                setDuration(recordedDuration);
+                setIsLoaded(true);
+            } else if (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
+                setDuration(audio.duration);
+                setIsLoaded(true);
+            }
         };
 
         const setAudioTime = () => {
-            setCurrentTime(audio.currentTime);
+            if (!isNaN(audio.currentTime)) {
+                setCurrentTime(audio.currentTime);
+
+                // If we didn't have duration before, try to get it during playback
+                if (duration === 0 && audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
+                    setDuration(audio.duration);
+                }
+            }
         };
 
         const handleEnded = () => {
@@ -31,42 +55,118 @@ export default function VoicePlayer({ audioUrl }: VoicePlayerProps) {
             setCurrentTime(0);
         };
 
-        // Events
+        const handleLoadStart = () => {
+            if (!recordedDuration) {
+                setIsLoaded(false);
+            }
+        };
+
+        const handleCanPlay = () => {
+            setIsLoaded(true);
+            if (!recordedDuration) {
+                setAudioData();
+            }
+        };
+
+        const handleDurationChange = () => {
+            // This fires when duration becomes available
+            if (!recordedDuration && audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
+                setDuration(audio.duration);
+            }
+        };
+
+        const handleError = (e: Event) => {
+            console.error('Audio loading error:', e);
+            setIsLoaded(false);
+            if (!recordedDuration) {
+                setDuration(0);
+            }
+            setCurrentTime(0);
+        };
+
+        // Event listeners - use loadeddata for recorded audio compatibility
+        audio.addEventListener('loadstart', handleLoadStart);
         audio.addEventListener('loadeddata', setAudioData);
+        audio.addEventListener('loadedmetadata', setAudioData);
+        audio.addEventListener('canplay', handleCanPlay);
+        audio.addEventListener('durationchange', handleDurationChange);
         audio.addEventListener('timeupdate', setAudioTime);
         audio.addEventListener('ended', handleEnded);
+        audio.addEventListener('error', handleError);
+
+        // If we have recordedDuration, we can consider it loaded
+        if (recordedDuration) {
+            setIsLoaded(true);
+        }
 
         return () => {
+            audio.removeEventListener('loadstart', handleLoadStart);
             audio.removeEventListener('loadeddata', setAudioData);
+            audio.removeEventListener('loadedmetadata', setAudioData);
+            audio.removeEventListener('canplay', handleCanPlay);
+            audio.removeEventListener('durationchange', handleDurationChange);
             audio.removeEventListener('timeupdate', setAudioTime);
             audio.removeEventListener('ended', handleEnded);
+            audio.removeEventListener('error', handleError);
         };
-    }, []);
+    }, [recordedDuration, duration]);
 
-    const handlePlayPause = () => {
+    const handlePlayPause = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
         const audio = audioRef.current;
         if (!audio) return;
 
-        if (isPlaying) {
-            audio.pause();
-        } else {
-            audio.play();
-        }
+        try {
+            if (isPlaying) {
+                audio.pause();
+                setIsPlaying(false);
+            } else {
+                // Allow playing if we have recordedDuration or if audio is ready
+                if (recordedDuration || isLoaded || audio.readyState >= 2) {
+                    await audio.play();
+                    setIsPlaying(true);
 
-        setIsPlaying(!isPlaying);
+                    // Try to get duration on first play if we don't have it
+                    if (duration === 0 && audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
+                        setDuration(audio.duration);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Audio play error:', error);
+            setIsPlaying(false);
+        }
     };
 
     const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        e.stopPropagation();
+
         const audio = audioRef.current;
         if (!audio) return;
 
         const newTime = parseFloat(e.target.value);
-        audio.currentTime = newTime;
-        setCurrentTime(newTime);
+        if (!isNaN(newTime) && newTime >= 0) {
+            // Be more permissive with seeking when we have recordedDuration
+            if (duration > 0 && newTime <= duration) {
+                audio.currentTime = newTime;
+                setCurrentTime(newTime);
+            } else if (recordedDuration && newTime <= recordedDuration) {
+                try {
+                    audio.currentTime = newTime;
+                    setCurrentTime(newTime);
+                } catch (error) {
+                    console.warn('Seeking failed:', error);
+                }
+            }
+        }
     };
 
     const formatTime = (time: number): string => {
-        if (isNaN(time)) return '0:00';
+        if (isNaN(time) || !isFinite(time) || time < 0) {
+            return '0:00';
+        }
 
         const minutes = Math.floor(time / 60);
         const seconds = Math.floor(time % 60);
@@ -74,15 +174,20 @@ export default function VoicePlayer({ audioUrl }: VoicePlayerProps) {
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     };
 
+    // Determine if the player should be considered ready
+    const isReady = recordedDuration ? true : isLoaded;
+
     return (
         <div className="rounded-md bg-gray-50 dark:bg-gray-800/50 p-4">
             <audio ref={audioRef} src={audioUrl} preload="metadata" />
             <div className="flex items-center gap-4">
                 <Button
+                    type="button"
                     size="icon"
                     onClick={handlePlayPause}
                     className="h-10 w-10 rounded-full flex-shrink-0"
                     variant="default"
+                    disabled={!isReady}
                 >
                     {isPlaying ? (
                         <Pause className="h-5 w-5" />
@@ -97,7 +202,8 @@ export default function VoicePlayer({ audioUrl }: VoicePlayerProps) {
                         max={duration || 0}
                         value={currentTime}
                         onChange={handleTimeChange}
-                        className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700 accent-blue-600 dark:accent-blue-500"
+                        disabled={!isReady}
+                        className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700 accent-blue-600 dark:accent-blue-500 disabled:opacity-50"
                     />
                     <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                         <span>{formatTime(currentTime)}</span>

@@ -1,0 +1,250 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { VoiceWithUserAndGenre, Genre, GENDER_OPTIONS, UpdateVoiceFormData } from '@/types/voice';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import VoicePlayer from '@/components/voice/VoicePlayer';
+import ChangeVoiceButton from '@/components/voice/ChangeVoiceButton';
+import { User, Settings, Globe, Save, Edit3, Volume2 } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface VoiceEditFormProps {
+    voice: VoiceWithUserAndGenre;
+    genres: Genre[];
+}
+
+export default function VoiceEditForm({ voice, genres }: VoiceEditFormProps) {
+    const router = useRouter();
+    const [isLoading, setIsLoading] = useState(false);
+    const [formData, setFormData] = useState<UpdateVoiceFormData & { name: string }>({
+        name: voice.name,
+        description: voice.description || '',
+        isPublic: voice.isPublic,
+        genreId: voice.genre?.id || '',
+        gender: voice.gender || ''
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+
+        try {
+            const response = await fetch(`/api/voices/${voice.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...formData,
+                    // Convert placeholder values back to null for the API
+                    genreId: formData.genreId === 'none' ? null : formData.genreId,
+                    gender: formData.gender === 'none' ? null : formData.gender
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update voice');
+            }
+
+            toast.success('Voice updated successfully!');
+            router.push(`/voice/${voice.id}`);
+            router.refresh();
+        } catch (error) {
+            console.error('Error updating voice:', error);
+            toast.error('Failed to update voice. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleInputChange = (field: keyof typeof formData, value: string | boolean) => {
+        setFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    return (
+        <div className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Basic Information */}
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 dark:from-gray-900 dark:via-blue-900/10 dark:to-indigo-900/20">
+                    <CardHeader className="pb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+                                <Edit3 className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-xl font-semibold">Basic Information</CardTitle>
+                                <CardDescription className="text-gray-600 dark:text-gray-400">
+                                    Update the details and settings for your voice
+                                </CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="name" className="text-sm font-medium">Voice Name</Label>
+                            <Input
+                                id="name"
+                                type="text"
+                                value={formData.name}
+                                onChange={(e) => handleInputChange('name', e.target.value)}
+                                required
+                                placeholder="Enter voice name"
+                                className="h-11 bg-white/80 dark:bg-gray-800/80 border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+                            <Textarea
+                                id="description"
+                                value={formData.description}
+                                onChange={(e) => handleInputChange('description', e.target.value)}
+                                placeholder="Describe this voice..."
+                                rows={4}
+                                className="bg-white/80 dark:bg-gray-800/80 border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="genre" className="text-sm font-medium flex items-center gap-2">
+                                    <Settings className="h-4 w-4" />
+                                    Genre
+                                </Label>
+                                <Select
+                                    value={formData.genreId || "none"}
+                                    onValueChange={(value) => handleInputChange('genreId', value)}
+                                >
+                                    <SelectTrigger className="h-11 bg-white/80 dark:bg-gray-800/80 border-gray-200 dark:border-gray-700">
+                                        <SelectValue placeholder="Select genre (optional)" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">No genre</SelectItem>
+                                        {genres.map((genre) => (
+                                            <SelectItem key={genre.id} value={genre.id}>
+                                                {genre.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="gender" className="text-sm font-medium flex items-center gap-2">
+                                    <User className="h-4 w-4" />
+                                    Gender
+                                </Label>
+                                <Select
+                                    value={formData.gender || "none"}
+                                    onValueChange={(value) => handleInputChange('gender', value)}
+                                >
+                                    <SelectTrigger className="h-11 bg-white/80 dark:bg-gray-800/80 border-gray-200 dark:border-gray-700">
+                                        <SelectValue placeholder="Select gender (optional)" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">No gender specified</SelectItem>
+                                        {GENDER_OPTIONS.map((gender) => (
+                                            <SelectItem key={gender} value={gender}>
+                                                {gender}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800">
+                            <div className="flex items-center space-x-3">
+                                <Globe className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                <div>
+                                    <Label htmlFor="isPublic" className="text-sm font-medium text-green-900 dark:text-green-100">
+                                        Make this voice public
+                                    </Label>
+                                    <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                                        Share with the community for others to discover and use
+                                    </p>
+                                </div>
+                            </div>
+                            <Switch
+                                id="isPublic"
+                                checked={formData.isPublic}
+                                onCheckedChange={(checked) => handleInputChange('isPublic', checked)}
+                                className="data-[state=checked]:bg-green-600"
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Audio Sample */}
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-purple-50/30 to-pink-50/40 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/20">
+                    <CardHeader className="pb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 text-white">
+                                <Volume2 className="h-5 w-5" />
+                            </div>
+                            <div className="flex-1">
+                                <CardTitle className="text-xl font-semibold">Audio Sample</CardTitle>
+                                <CardDescription className="text-gray-600 dark:text-gray-400">
+                                    Your current voice sample. Changes affect future generations only.
+                                </CardDescription>
+                            </div>
+                            <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                                Current Sample
+                            </Badge>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="p-4 rounded-xl bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
+                            <Label className="text-sm font-medium mb-3 block">Current Audio Sample</Label>
+                            <VoicePlayer audioUrl={voice.audioSample} />
+                        </div>
+
+                        <div className="flex justify-center pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <ChangeVoiceButton voiceId={voice.id} />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Submit Actions */}
+                <div className="flex justify-end space-x-4 pt-4">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => router.back()}
+                        className="px-6 h-11 font-medium"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        disabled={isLoading}
+                        className="px-8 h-11 font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all duration-200"
+                    >
+                        {isLoading ? (
+                            <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Saving Changes...
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <Save className="h-4 w-4" />
+                                Save Changes
+                            </div>
+                        )}
+                    </Button>
+                </div>
+            </form>
+        </div>
+    );
+}

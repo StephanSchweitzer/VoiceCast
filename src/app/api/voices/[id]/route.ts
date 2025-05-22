@@ -22,6 +22,12 @@ export async function GET(
                         name: true,
                         image: true
                     }
+                },
+                genre: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
                 }
             }
         });
@@ -59,7 +65,7 @@ export async function PUT(
 
     try {
         const body = await request.json();
-        const { name, description, isPublic } = body;
+        const { name, description, isPublic, genreId, gender, duration } = body; // ADD: Accept duration
 
         const voice = await prisma.voice.findUnique({
             where: { id }
@@ -79,7 +85,10 @@ export async function PUT(
             data: {
                 ...(name && { name }),
                 ...(description !== undefined && { description }),
-                ...(isPublic !== undefined && { isPublic })
+                ...(isPublic !== undefined && { isPublic }),
+                ...(genreId !== undefined && { genreId: genreId || null }),
+                ...(gender !== undefined && { gender: gender || null }),
+                ...(duration !== undefined && { duration }) // ADD: Allow duration updates
             },
             select: {
                 id: true,
@@ -87,9 +96,17 @@ export async function PUT(
                 description: true,
                 isPublic: true,
                 audioSample: true,
+                duration: true, // ADD: Include duration in response
+                gender: true,
                 createdAt: true,
                 updatedAt: true,
-                userId: true
+                userId: true,
+                genre: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                }
             }
         });
 
@@ -101,6 +118,14 @@ export async function PUT(
             { status: 500 }
         );
     }
+}
+
+// PATCH - Update voice metadata (for the edit form)
+export async function PATCH(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    return PUT(request, { params });
 }
 
 // DELETE - Delete voice
@@ -134,8 +159,8 @@ export async function DELETE(
             where: { id }
         });
 
-        // Delete the associated audio file
-        if (voice.audioSample) {
+        // Delete the associated audio file if it's a local upload
+        if (voice.audioSample && voice.audioSample.startsWith('/uploads/')) {
             try {
                 const filename = voice.audioSample.replace('/uploads/', '');
                 const filepath = join(process.cwd(), 'public', 'uploads', filename);

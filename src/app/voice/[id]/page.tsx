@@ -86,7 +86,9 @@ export default async function VoicePage({ params }: VoicePageProps) {
                         className="resize-none"
                     />
                     <div className="mt-2 flex justify-end">
-                        <Button>
+                        <Button
+                            variant="outline"
+                        >
                             Generate Speech
                         </Button>
                     </div>

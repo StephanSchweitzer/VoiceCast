@@ -14,6 +14,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata = {
     title: 'Voicecast - Create and Use Text-to-Speech Voices',
     description: 'A platform to create, manage, and use natural text-to-speech voices',
+    icons: {
+        icon: '/favicon.ico',
+    },
 };
 
 export default function RootLayout({
