@@ -79,42 +79,7 @@ export default function Sidebar() {
                         ))}
                     </nav>
 
-                    {/* User actions for mobile */}
-                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 md:hidden">
-                        {session ? (
-                            <div className="space-y-2">
-                                <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
-                                    Signed in as <span className="font-medium">{session.user.name || session.user.email}</span>
-                                </div>
-                                <button
-                                    onClick={() => {
-                                        signOut();
-                                        closeSidebar();
-                                    }}
-                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white rounded-md transition-colors"
-                                >
-                                    Sign out
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="space-y-2">
-                                <Link
-                                    href="/login"
-                                    onClick={closeSidebar}
-                                    className="block w-full text-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white rounded-md transition-colors"
-                                >
-                                    Sign in
-                                </Link>
-                                <Link
-                                    href="/register"
-                                    onClick={closeSidebar}
-                                    className="block w-full text-center px-3 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors"
-                                >
-                                    Sign up
-                                </Link>
-                            </div>
-                        )}
-                    </div>
+
                 </div>
 
                 {/* Voice Management Section */}
@@ -183,6 +148,43 @@ export default function Sidebar() {
                         </Link>
                     </div>
                 </div>
+                {/* User actions for mobile */}
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 md:hidden">
+                    {session ? (
+                        <div className="space-y-2">
+                            <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                Signed in as <span className="font-medium">{session.user.name || session.user.email}</span>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    signOut();
+                                    closeSidebar();
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white rounded-md transition-colors"
+                            >
+                                Sign out
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            <Link
+                                href="/login"
+                                onClick={closeSidebar}
+                                className="block w-full text-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white rounded-md transition-colors"
+                            >
+                                Sign in
+                            </Link>
+                            <Link
+                                href="/register"
+                                onClick={closeSidebar}
+                                className="block w-full text-center px-3 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors"
+                            >
+                                Sign up
+                            </Link>
+                        </div>
+                    )}
+                </div>
+
             </aside>
         </>
     );
