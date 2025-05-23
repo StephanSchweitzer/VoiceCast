@@ -16,7 +16,7 @@ interface SidebarContextType {
 }
 
 const SidebarContext = createContext<SidebarContextType>({
-    isOpen: true, // Default to open for desktop view
+    isOpen: false, // Default to closed
     toggleSidebar: () => {},
     closeSidebar: () => {},
     openSidebar: () => {},
@@ -29,28 +29,59 @@ const SidebarContext = createContext<SidebarContextType>({
 export const useSidebar = () => useContext(SidebarContext);
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
-    // Default to open for desktop, closed for mobile
-    const [isOpen, setIsOpen] = useState(true);
+    // Start with closed by default
+    const [isOpen, setIsOpen] = useState(false);
+    const [isClient, setIsClient] = useState(false);
     const [voices, setVoices] = useState<Voice[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { data: session, status } = useSession();
 
-    // Check for mobile on client side only
+    // Handle client-side mounting and load saved state
     useEffect(() => {
-        const checkIfMobile = () => {
-            setIsOpen(window.innerWidth > 768);
+        setIsClient(true);
+
+        // Load saved sidebar state from localStorage
+        const savedState = localStorage.getItem('sidebar-open');
+        if (savedState !== null) {
+            const isOpenSaved = JSON.parse(savedState);
+            // Only apply saved state if we're on desktop
+            const isDesktop = window.innerWidth > 768;
+            setIsOpen(isDesktop && isOpenSaved);
+        } else {
+            // Default behavior: closed on mobile, closed on desktop (changed from open)
+            setIsOpen(false);
+        }
+    }, []);
+
+    // Save state to localStorage whenever it changes (only on client)
+    useEffect(() => {
+        if (isClient) {
+            localStorage.setItem('sidebar-open', JSON.stringify(isOpen));
+        }
+    }, [isOpen, isClient]);
+
+    // Handle window resize
+    useEffect(() => {
+        if (!isClient) return;
+
+        const handleResize = () => {
+            const isDesktop = window.innerWidth > 768;
+            if (!isDesktop) {
+                // Always close on mobile
+                setIsOpen(false);
+            } else {
+                // On desktop, restore saved state
+                const savedState = localStorage.getItem('sidebar-open');
+                if (savedState !== null) {
+                    setIsOpen(JSON.parse(savedState));
+                }
+            }
         };
 
-        // Set initial state
-        checkIfMobile();
-
-        // Add event listener for window resize
-        window.addEventListener('resize', checkIfMobile);
-
-        // Clean up
-        return () => window.removeEventListener('resize', checkIfMobile);
-    }, []);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, [isClient]);
 
     const toggleSidebar = useCallback(() => {
         setIsOpen(!isOpen);
