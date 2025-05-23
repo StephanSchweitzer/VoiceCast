@@ -19,9 +19,10 @@ import { toast } from 'sonner';
 interface VoiceEditFormProps {
     voice: VoiceWithUserAndGenre;
     genres: Genre[];
+    onSuccess?: () => void; // Added optional onSuccess callback
 }
 
-export default function VoiceEditForm({ voice, genres }: VoiceEditFormProps) {
+export default function VoiceEditForm({ voice, genres, onSuccess }: VoiceEditFormProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState<UpdateVoiceFormData & { name: string }>({
@@ -55,8 +56,13 @@ export default function VoiceEditForm({ voice, genres }: VoiceEditFormProps) {
             }
 
             toast.success('Voice updated successfully!');
-            router.push(`/voice/${voice.id}`);
-            router.refresh();
+
+            if (onSuccess) {
+                onSuccess();
+            } else {
+                router.push(`/voice/${voice.id}`);
+                router.refresh();
+            }
         } catch (error) {
             console.error('Error updating voice:', error);
             toast.error('Failed to update voice. Please try again.');

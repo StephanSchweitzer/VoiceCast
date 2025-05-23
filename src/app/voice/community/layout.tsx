@@ -1,9 +1,4 @@
-'use client';
-
 import { ReactNode } from 'react';
-import Navbar from '@/components/layout/Navbar';
-import Sidebar from '@/components/layout/Sidebar';
-import { SidebarProvider } from '@/contexts/SidebarContext';
 
 interface LayoutProps {
     children: ReactNode;
