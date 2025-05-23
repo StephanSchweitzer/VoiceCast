@@ -12,7 +12,7 @@ export default function SidebarToggle() {
             onClick={toggleSidebar}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="flex items-center justify-center w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm hover:shadow-md"
+            className="flex items-center justify-center w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 focus:outline-none shadow-sm hover:shadow-md"
             aria-label={isOpen ? 'Close sidebar' : 'Open sidebar'}
         >
             <div className="relative w-5 h-5">
@@ -35,7 +35,7 @@ export default function SidebarToggle() {
                             className="text-gray-700 dark:text-gray-200"
                         >
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                            <line x1="9" y1="9" x2="9" y2="15"/>
+                            <line x1="9" y1="3" x2="9" y2="21"/>
                         </svg>
                     </div>
                 )}
@@ -44,9 +44,7 @@ export default function SidebarToggle() {
                 <div
                     className={`absolute inset-0 transition-all duration-200 ease-in-out ${
                         isOpen
-                            ? isHovered
-                                ? 'opacity-100 scale-100 rotate-0'   // Open + hover: right arrow (will close)
-                                : 'opacity-100 scale-100 rotate-180' // Open: left arrow
+                            ? 'opacity-100 scale-100 rotate-180' // Open: always left arrow (no hover change)
                             : isHovered
                                 ? 'opacity-100 scale-100 rotate-0'   // Closed + hover: right arrow (will open)
                                 : 'opacity-0 scale-90'               // Closed: hidden
