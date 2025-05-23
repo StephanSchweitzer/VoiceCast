@@ -1,11 +1,9 @@
 import { prisma } from './db';
 import bcrypt from 'bcrypt';
-import NextAuth, { NextAuthOptions } from 'next-auth';
+import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
-import { createContext, useContext, ReactNode } from 'react';
-import { SessionProvider, useSession } from 'next-auth/react';
-import {JWT} from "next-auth/jwt";
+import { JWT } from "next-auth/jwt";
 
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
@@ -65,10 +63,14 @@ export const authOptions: NextAuthOptions = {
         strategy: 'jwt',
         maxAge: 30 * 24 * 60 * 60, // 30 days
     },
+    jwt: {
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+    },
     secret: process.env.NEXTAUTH_SECRET,
     pages: {
         signIn: '/login',
         signOut: '/',
         error: '/login',
-    }
+    },
+    debug: process.env.NODE_ENV === 'development',
 };
