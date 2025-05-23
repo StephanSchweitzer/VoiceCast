@@ -1,6 +1,7 @@
 import { Inter } from 'next/font/google';
 import './styles/main.css';
 import './styles/theme.css';
+import './styles/nprogress.css';
 import Navbar from '@/components/layout/Navbar';
 import Sidebar from '@/components/layout/Sidebar';
 import { AuthProvider } from '@/components/providers/AuthProvider';
@@ -8,6 +9,7 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { SidebarProvider } from '@/contexts/SidebarContext';
 import { Toaster } from 'sonner';
 import { ReactNode } from 'react';
+import LoadingBar from '@/components/ui/LoadingBar';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -30,6 +32,7 @@ export default function RootLayout({
         <ThemeProvider>
             <AuthProvider>
                 <SidebarProvider>
+                    <LoadingBar />
                     <div className="flex h-screen flex-col">
                         <Navbar />
                         {/* Add top padding to account for fixed navbar */}
