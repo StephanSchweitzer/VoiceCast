@@ -41,6 +41,8 @@ export const authOptions: NextAuthOptions = {
                     name: user.name,
                     email: user.email,
                     image: user.image,
+                    role: user.role || 'user', // Include role from database
+                    isAdmin: user.role === 'admin', // Derive isAdmin from role
                 };
             }
         })
@@ -49,12 +51,28 @@ export const authOptions: NextAuthOptions = {
         async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
+                token.role = user.role;
+                token.isAdmin = user.isAdmin;
+            } else if (token.id) {
+                // Refresh user data from database on subsequent requests
+                // This ensures role changes are reflected without re-login
+                const dbUser = await prisma.user.findUnique({
+                    where: { id: token.id as string },
+                    select: { role: true }
+                });
+
+                if (dbUser) {
+                    token.role = dbUser.role || 'user';
+                    token.isAdmin = dbUser.role === 'admin';
+                }
             }
             return token;
         },
         async session({ session, token }: { session: any; token: JWT }) {
             if (token) {
                 session.user.id = token.id;
+                session.user.role = token.role;
+                session.user.isAdmin = token.isAdmin;
             }
             return session;
         }

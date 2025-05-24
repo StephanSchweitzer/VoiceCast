@@ -10,6 +10,7 @@ import { SidebarProvider } from '@/contexts/SidebarContext';
 import { Toaster } from 'sonner';
 import { ReactNode } from 'react';
 import LoadingBar from '@/components/ui/LoadingBar';
+import LayoutSpacer from '@/components/admin/LayoutSpacer';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -28,22 +29,26 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" suppressHydrationWarning className="h-full">
-        <body className={`${inter.className} dark:bg-gray-900 dark:text-white h-full overflow-hidden`}>
+        <body className={`${inter.className} dark:bg-gray-900 dark:text-white`}>
         <ThemeProvider>
             <AuthProvider>
                 <SidebarProvider>
                     <LoadingBar />
-                    <div className="flex h-full flex-col">
+                    <div className="min-h-screen">
                         <Navbar />
+
                         {/* Container that takes remaining space after navbar */}
-                        <div className="flex flex-1 min-h-0 pt-16">
-                            {/* Main content - min-h-0 prevents flex item from growing beyond container */}
-                            <main className="w-full flex-1 overflow-y-auto">
-                                <div className="p-4">
-                                    {children}
-                                </div>
-                            </main>
-                        </div>
+                        <LayoutSpacer>
+                            <div className="w-full">
+                                {/* Main content */}
+                                <main className="w-full">
+                                    <div className="p-4">
+                                        {children}
+                                    </div>
+                                </main>
+                            </div>
+                        </LayoutSpacer>
+
                         {/* Sidebar positioned absolutely or fixed */}
                         <Sidebar />
                     </div>
