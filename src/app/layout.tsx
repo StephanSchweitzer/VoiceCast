@@ -27,22 +27,24 @@ export default function RootLayout({
     children: ReactNode;
 }) {
     return (
-        <html lang="en" suppressHydrationWarning>
-        <body className={`${inter.className} dark:bg-gray-900 dark:text-white`}>
+        <html lang="en" suppressHydrationWarning className="h-full">
+        <body className={`${inter.className} dark:bg-gray-900 dark:text-white h-full overflow-hidden`}>
         <ThemeProvider>
             <AuthProvider>
                 <SidebarProvider>
                     <LoadingBar />
-                    <div className="flex h-screen flex-col">
+                    <div className="flex h-full flex-col">
                         <Navbar />
-                        {/* Add top padding to account for fixed navbar */}
-                        <div className="flex flex-1 overflow-hidden mt-16">
-                            {/* Main content takes full width with proper padding */}
-                            <main className="w-full flex-1 overflow-y-auto p-4">
-                                {children}
+                        {/* Container that takes remaining space after navbar */}
+                        <div className="flex flex-1 min-h-0 pt-16">
+                            {/* Main content - min-h-0 prevents flex item from growing beyond container */}
+                            <main className="w-full flex-1 overflow-y-auto">
+                                <div className="p-4">
+                                    {children}
+                                </div>
                             </main>
                         </div>
-                        {/* Sidebar is rendered outside the main layout flow */}
+                        {/* Sidebar positioned absolutely or fixed */}
                         <Sidebar />
                     </div>
                     <Toaster richColors position="top-center" />
