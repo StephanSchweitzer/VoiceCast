@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     const validateForm = (): boolean => {
         const errors = {
@@ -131,7 +132,13 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
                 if (onSuccess) {
                     onSuccess();
                 } else {
-                    router.push('/auth/login?message=Registration successful! Please sign in.');
+                    // Check if there's a 'from' parameter to preserve the redirect
+                    const from = searchParams.get('from');
+                    const loginUrl = from
+                        ? `/auth/login?message=${encodeURIComponent('Registration successful! Please sign in.')}&from=${from}`
+                        : `/auth/login?message=${encodeURIComponent('Registration successful! Please sign in.')}`;
+
+                    router.push(loginUrl);
                 }
             } else {
                 if (response.status === 409) {

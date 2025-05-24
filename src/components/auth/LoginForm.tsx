@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,28 @@ export default function LoginForm({
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Check for success message from registration
+    const message = searchParams.get('message');
+
+    // Get the redirect URL from search params or use default
+    const getRedirectUrl = () => {
+        const from = searchParams.get('from');
+        if (from) {
+            // Decode the URL and make sure it's a valid internal path
+            try {
+                const decodedFrom = decodeURIComponent(from);
+                // Ensure it's an internal path (starts with /)
+                if (decodedFrom.startsWith('/') && !decodedFrom.startsWith('//')) {
+                    return decodedFrom;
+                }
+            } catch (e) {
+                // If decoding fails, use default
+            }
+        }
+        return redirectUrl;
+    };
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -44,7 +66,10 @@ export default function LoginForm({
                 return;
             }
 
-            router.push(redirectUrl);
+            // Success! Redirect to the intended destination
+            const destination = getRedirectUrl();
+            router.push(destination);
+            router.refresh(); // Refresh to update auth state
         } catch (error) {
             setError('Something went wrong. Please try again.');
             setLoading(false);
@@ -55,6 +80,13 @@ export default function LoginForm({
         <div className="w-full max-w-md mx-auto">
             <div className="bg-card border rounded-xl p-6 shadow-lg">
                 <div className="space-y-5">
+                    {/* Show success message from registration */}
+                    {message && (
+                        <Alert className="border-green-200 bg-green-50 text-green-800">
+                            <AlertDescription className="text-sm">{message}</AlertDescription>
+                        </Alert>
+                    )}
+
                     {error && (
                         <Alert variant="destructive" className="border-destructive/20">
                             <AlertDescription className="text-sm">{error}</AlertDescription>
