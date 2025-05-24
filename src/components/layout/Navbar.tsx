@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
-import { useSidebar } from '@/contexts/SidebarContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import SidebarToggle from '@/components/ui/SidebarToggle';
 
@@ -64,13 +63,13 @@ export default function Navbar() {
                         ) : (
                             <div className="flex space-x-2">
                                 <Link
-                                    href="/login"
+                                    href="/auth/login"
                                     className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
                                 >
                                     Sign in
                                 </Link>
                                 <Link
-                                    href="/register"
+                                    href="/auth/register"
                                     className="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
                                 >
                                     Sign up

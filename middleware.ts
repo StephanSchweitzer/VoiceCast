@@ -7,7 +7,7 @@ export async function middleware(req: NextRequest) {
     const path = req.nextUrl.pathname;
 
     // If it's the homepage, login, or register page, don't do anything
-    if (path === '/' || path === '/login' || path === '/register') {
+    if (path === '/' || path === '/auth/login' || path === '/auth/register') {
         return NextResponse.next();
     }
 
@@ -18,7 +18,7 @@ export async function middleware(req: NextRequest) {
 
     // If the user is not signed in and is trying to access a protected route, redirect to the login page
     if (!session && (path.includes('/dashboard') || path.includes('/voice'))) {
-        return NextResponse.redirect(new URL('/login', req.url));
+        return NextResponse.redirect(new URL('/auth/login', req.url));
     }
 
     // If the user is signed in and is trying to access a voice route, check if the voice belongs to them

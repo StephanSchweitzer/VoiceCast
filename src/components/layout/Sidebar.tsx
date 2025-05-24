@@ -168,14 +168,14 @@ export default function Sidebar() {
                     ) : (
                         <div className="space-y-2">
                             <Link
-                                href="/login"
+                                href="/auth/login"
                                 onClick={closeSidebar}
                                 className="block w-full text-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white rounded-md transition-colors"
                             >
                                 Sign in
                             </Link>
                             <Link
-                                href="/register"
+                                href="/auth/register"
                                 onClick={closeSidebar}
                                 className="block w-full text-center px-3 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors"
                             >

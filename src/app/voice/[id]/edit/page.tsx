@@ -12,7 +12,7 @@ export default async function VoiceEditPage({ params }: VoiceEditPageProps) {
     const session = await getServerSession(authOptions);
 
     if (!session) {
-        redirect('/login');
+        redirect('/auth/login');
     }
 
     // Page renders immediately, client handles the rest

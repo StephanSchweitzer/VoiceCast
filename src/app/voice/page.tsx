@@ -9,7 +9,7 @@ export default async function VoiceListPage() {
     const session = await getServerSession(authOptions);
 
     if (!session) {
-        redirect('/login');
+        redirect('/auth/login');
     }
 
     // Fetch user's voices

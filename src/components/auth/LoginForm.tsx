@@ -2,23 +2,29 @@
 
 import { useState, FormEvent } from 'react';
 import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Eye, EyeOff, Loader2, Mail, Lock } from 'lucide-react';
 
 interface LoginFormProps {
-    onSuccess?: () => void;
     redirectUrl?: string;
     showRegisterLink?: boolean;
 }
 
 export default function LoginForm({
-                                      onSuccess,
                                       redirectUrl = '/dashboard',
                                       showRegisterLink = true
                                   }: LoginFormProps) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const router = useRouter();
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -38,83 +44,105 @@ export default function LoginForm({
                 return;
             }
 
-            if (onSuccess) {
-                onSuccess();
-            } else if (redirectUrl) {
-                window.location.href = redirectUrl;
-            }
+            router.push(redirectUrl);
         } catch (error) {
-            setError('Something went wrong');
+            setError('Something went wrong. Please try again.');
             setLoading(false);
         }
     };
 
     return (
-        <div className="w-full max-w-sm mx-auto">
-            {error && (
-                <div className="rounded-md bg-red-50 dark:bg-red-900/30 p-4 mb-4">
-                    <div className="text-sm text-red-700 dark:text-red-400">{error}</div>
-                </div>
-            )}
+        <div className="w-full max-w-md mx-auto">
+            <div className="bg-card border rounded-xl p-6 shadow-lg">
+                <div className="space-y-5">
+                    {error && (
+                        <Alert variant="destructive" className="border-destructive/20">
+                            <AlertDescription className="text-sm">{error}</AlertDescription>
+                        </Alert>
+                    )}
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
-                <div>
-                    <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
-                        Email address
-                    </label>
-                    <div className="mt-2">
-                        <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            autoComplete="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-blue-600 dark:focus:ring-blue-500 dark:bg-gray-800 sm:text-sm sm:leading-6"
-                        />
-                    </div>
-                </div>
+                    <form className="space-y-4" onSubmit={handleSubmit}>
+                        <div className="space-y-2">
+                            <Label htmlFor="email" className="text-sm font-medium text-foreground">
+                                Email address
+                            </Label>
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    autoComplete="email"
+                                    required
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="Enter your email"
+                                    className="pl-10 h-10 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                                    disabled={loading}
+                                />
+                            </div>
+                        </div>
 
-                <div>
-                    <div className="flex items-center justify-between">
-                        <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
-                            Password
-                        </label>
-                    </div>
-                    <div className="mt-2">
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            autoComplete="current-password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-blue-600 dark:focus:ring-blue-500 dark:bg-gray-800 sm:text-sm sm:leading-6"
-                        />
-                    </div>
-                </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                                Password
+                            </Label>
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? "text" : "password"}
+                                    autoComplete="current-password"
+                                    required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="Enter your password"
+                                    className="pl-10 pr-10 h-10 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                                    disabled={loading}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                    disabled={loading}
+                                >
+                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                            </div>
+                        </div>
 
-                <div>
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="flex w-full justify-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-700 dark:hover:bg-blue-600"
-                    >
-                        {loading ? 'Signing in...' : 'Sign in'}
-                    </button>
-                </div>
-            </form>
+                        <Button
+                            type="submit"
+                            disabled={loading || !email || !password}
+                            className="w-full h-10 text-sm font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Signing in...
+                                </>
+                            ) : (
+                                'Sign in'
+                            )}
+                        </Button>
+                    </form>
 
-            {showRegisterLink && (
-                <p className="mt-10 text-center text-sm text-gray-500 dark:text-gray-400">
-                    Not a member?{' '}
-                    <Link href="/register" className="font-semibold leading-6 text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
-                        Create an account
-                    </Link>
-                </p>
-            )}
+                    {showRegisterLink && (
+                        <div className="text-center pt-4 border-t border-border">
+                            <p className="text-sm text-muted-foreground">
+                                Don't have an account?{' '}
+                                <Link
+                                    href="/auth/register"
+                                    className="font-medium text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline"
+                                >
+                                    Create account
+                                </Link>
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }
