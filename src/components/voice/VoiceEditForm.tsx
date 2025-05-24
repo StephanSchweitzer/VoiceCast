@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -169,25 +168,57 @@ export default function VoiceEditForm({ voice, genres, onSuccess }: VoiceEditFor
                                 </Select>
                             </div>
                         </div>
+                    </CardContent>
+                </Card>
 
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800">
-                            <div className="flex items-center space-x-3">
-                                <Globe className="h-5 w-5 text-green-600 dark:text-green-400" />
-                                <div>
-                                    <Label htmlFor="isPublic" className="text-sm font-medium text-green-900 dark:text-green-100">
-                                        Make this voice public
-                                    </Label>
-                                    <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                                        Share with the community for others to discover and use
-                                    </p>
-                                </div>
+                {/* Privacy & Sharing */}
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-green-50/30 to-emerald-50/40 dark:from-gray-900 dark:via-green-900/10 dark:to-emerald-900/20">
+                    <CardHeader className="pb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white">
+                                <Globe className="h-5 w-5" />
                             </div>
-                            <Switch
-                                id="isPublic"
-                                checked={formData.isPublic}
-                                onCheckedChange={(checked) => handleInputChange('isPublic', checked)}
-                                className="data-[state=checked]:bg-green-600"
-                            />
+                            <div>
+                                <CardTitle className="text-xl font-semibold">Privacy & Sharing</CardTitle>
+                                <CardDescription className="text-gray-600 dark:text-gray-400">
+                                    Control who can discover and use your voice
+                                </CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div>
+                            <Label className="text-sm font-medium mb-3 block">Visibility</Label>
+                            <div className="flex rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+                                <button
+                                    type="button"
+                                    onClick={() => handleInputChange('isPublic', false)}
+                                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                                        !formData.isPublic
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-white hover:bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                                    }`}
+                                >
+                                    Private
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleInputChange('isPublic', true)}
+                                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                                        formData.isPublic
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-white hover:bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                                    }`}
+                                >
+                                    Public
+                                </button>
+                            </div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                                {formData.isPublic
+                                    ? 'Visible to everyone in the community'
+                                    : 'Only visible to you'
+                                }
+                            </p>
                         </div>
                     </CardContent>
                 </Card>
