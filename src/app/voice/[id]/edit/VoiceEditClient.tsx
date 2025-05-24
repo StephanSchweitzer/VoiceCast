@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -81,7 +81,7 @@ export default function VoiceEditClient({ voiceId }: VoiceEditClientProps) {
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
 
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -122,15 +122,37 @@ export default function VoiceEditClient({ voiceId }: VoiceEditClientProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [voiceId, router]);
 
     useEffect(() => {
         loadData();
-    }, [voiceId]);
+    }, [loadData]);
 
     const handleSuccess = () => {
         router.push(`/voice/${voiceId}`);
     };
+
+    // This function will be called when the voice sample is updated
+    const handleVoiceUpdated = useCallback(async () => {
+        console.log('Voice sample updated, refreshing data...');
+
+        try {
+            // Only fetch the voice data, not genres (they don't change)
+            const voiceResponse = await fetch(`/api/voices/${voiceId}`);
+
+            if (voiceResponse.ok) {
+                const updatedVoice: VoiceWithUserAndGenre = await voiceResponse.json();
+                setVoice(updatedVoice);
+                console.log('Voice data refreshed successfully');
+            } else {
+                console.error('Failed to refresh voice data');
+            }
+        } catch (err) {
+            console.error('Error refreshing voice data:', err);
+            // Fallback to full reload if individual refresh fails
+            loadData();
+        }
+    }, [voiceId, loadData]);
 
     return (
         <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 md:px-8">
@@ -160,6 +182,7 @@ export default function VoiceEditClient({ voiceId }: VoiceEditClientProps) {
                         voice={voice}
                         genres={genres}
                         onSuccess={handleSuccess}
+                        onVoiceUpdated={handleVoiceUpdated}
                     />
                 )}
             </div>

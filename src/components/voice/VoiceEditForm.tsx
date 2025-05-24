@@ -18,10 +18,11 @@ import { toast } from 'sonner';
 interface VoiceEditFormProps {
     voice: VoiceWithUserAndGenre;
     genres: Genre[];
-    onSuccess?: () => void; // Added optional onSuccess callback
+    onSuccess?: () => void;
+    onVoiceUpdated?: () => void; // Add callback for voice sample updates
 }
 
-export default function VoiceEditForm({ voice, genres, onSuccess }: VoiceEditFormProps) {
+export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated }: VoiceEditFormProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState<UpdateVoiceFormData & { name: string }>({
@@ -248,7 +249,10 @@ export default function VoiceEditForm({ voice, genres, onSuccess }: VoiceEditFor
                         </div>
 
                         <div className="flex justify-center pt-2 border-t border-gray-200 dark:border-gray-700">
-                            <ChangeVoiceButton voiceId={voice.id} />
+                            <ChangeVoiceButton
+                                voiceId={voice.id}
+                                onVoiceUpdated={onVoiceUpdated}
+                            />
                         </div>
                     </CardContent>
                 </Card>
