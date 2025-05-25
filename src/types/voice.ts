@@ -2,7 +2,7 @@
 export interface Genre {
     id: string;
     name: string;
-    createdAt: Date;
+    createdAt: string; // Timestamp string from API
 }
 
 // Base Voice interface
@@ -13,8 +13,9 @@ export interface Voice {
     audioSample: string;
     isPublic: boolean;
     gender?: string | null;
-    createdAt: Date;
-    updatedAt: Date;
+    duration?: number | null;
+    createdAt: string; // Timestamp string from API
+    updatedAt: string; // Timestamp string from API
     userId: string;
     genreId?: string | null;
 }
@@ -24,7 +25,12 @@ export interface VoiceWithUser extends Voice {
     user: {
         id: string;
         name: string | null;
+        image?: string | null;
     };
+    genre?: {
+        id: string;
+        name: string;
+    } | null;
 }
 
 // Voice with Genre information
@@ -37,13 +43,13 @@ export interface VoiceWithUserAndGenre extends Voice {
     user: {
         id: string;
         name: string | null;
+        image?: string | null;
     };
     genre?: Genre | null;
 }
 
 // For API responses that might include user info on public voices
 export interface VoiceWithOptionalUser extends Voice {
-    duration?: number | null;
     user?: {
         name: string | null;
         image?: string | null;
@@ -61,6 +67,7 @@ export interface CreateVoiceFormData {
     isPublic: boolean;
     genreId?: string | null;
     gender?: string | null;
+    duration?: number | null;
     audioSample?: string;
 }
 
@@ -70,12 +77,14 @@ export interface UpdateVoiceFormData {
     isPublic?: boolean;
     genreId?: string | null;
     gender?: string | null;
+    duration?: number | null;
 }
 
 // Audio upload response
 export interface AudioUploadResponse {
     url: string;
     filename: string;
+    duration?: number; // Duration from audio file analysis
 }
 
 // Gender options (for forms)

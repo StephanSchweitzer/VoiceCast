@@ -5,7 +5,22 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+    Loader2,
+    AlertCircle,
+    Clock,
+    User,
+    Tag,
+    Calendar,
+    Volume2,
+    Globe,
+    Lock,
+    Edit,
+    Trash2
+} from 'lucide-react';
 import VoicePlayer from '@/components/voice/VoicePlayer';
 import DeleteVoiceButton from '@/components/voice/DeleteVoiceButton';
 import { VoiceWithUser } from '@/types/voice';
@@ -15,51 +30,65 @@ interface VoiceViewClientProps {
     userId: string;
 }
 
-// Skeleton component for loading state
 function VoiceViewSkeleton() {
     return (
-        <div className="space-y-8 animate-pulse">
-            {/* Header skeleton */}
-            <div className="flex items-center justify-between">
-                <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                <div className="flex space-x-2">
-                    <div className="h-9 w-16 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
-                    <div className="h-9 w-16 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
-                </div>
-            </div>
+        <div className="space-y-6 animate-pulse">
+            {/* Header Card Skeleton */}
+            <Card>
+                <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between">
+                        <div className="space-y-3 flex-1 min-w-0"> {/* Added min-w-0 to prevent overflow */}
+                            {/* Responsive width instead of fixed w-64 */}
+                            <div className="h-8 w-full max-w-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                            {/* Responsive width instead of fixed w-48 */}
+                            <div className="h-4 w-full max-w-48 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        </div>
+                        <div className="flex space-x-2 flex-shrink-0 ml-4"> {/* Added flex-shrink-0 and margin */}
+                            <div className="h-9 w-16 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
+                            <div className="h-9 w-16 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex flex-wrap gap-2">
+                        <div className="h-6 w-16 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                        <div className="h-6 w-20 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                        <div className="h-6 w-14 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                    </div>
+                    {/* Made grid more responsive for mobile */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        {[1, 2, 3, 4].map((i) => (
+                            <div key={i} className="space-y-2">
+                                <div className="h-4 w-full max-w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                <div className="h-5 w-full max-w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
 
-            {/* Description skeleton */}
-            <div className="space-y-2">
-                <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            </div>
+            {/* Voice Sample Card Skeleton */}
+            <Card>
+                <CardHeader>
+                    <div className="h-6 w-full max-w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </CardHeader>
+                <CardContent>
+                    <div className="h-16 w-full bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                </CardContent>
+            </Card>
 
-            {/* Voice Sample section skeleton */}
-            <div className="space-y-4">
-                <div className="h-6 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                <div className="h-16 w-full bg-gray-200 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600"></div>
-            </div>
-
-            {/* Text-to-Speech section skeleton */}
-            <div className="space-y-4">
-                <div className="h-6 w-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                <div className="h-4 w-2/3 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                <div className="space-y-2">
+            {/* TTS Card Skeleton */}
+            <Card>
+                <CardHeader>
+                    <div className="h-6 w-full max-w-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </CardHeader>
+                <CardContent className="space-y-4">
                     <div className="h-24 w-full bg-gray-200 dark:bg-gray-700 rounded-md"></div>
                     <div className="flex justify-end">
                         <div className="h-9 w-32 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
                     </div>
-                </div>
-            </div>
-
-            {/* Footer skeleton */}
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
-                <div className="flex items-center space-x-2">
-                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                    <div className="h-1 w-1 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                    <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
         </div>
     );
 }
@@ -67,28 +96,48 @@ function VoiceViewSkeleton() {
 // Error component
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
     return (
-        <div className="flex flex-col items-center justify-center py-12 space-y-4">
-            <AlertCircle className="h-12 w-12 text-red-500" />
-            <div className="text-center">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    Voice not found
-                </h3>
-                <p className="text-sm text-red-600 dark:text-red-400 mb-4 max-w-md">
-                    {message}
-                </p>
-                <div className="space-x-2">
-                    <Button onClick={onRetry} variant="outline">
-                        Try Again
-                    </Button>
-                    <Button asChild variant="default">
-                        <Link href="/voice">
-                            Browse Voices
-                        </Link>
-                    </Button>
+        <Card className="border-red-200 dark:border-red-800">
+            <CardContent className="flex flex-col items-center justify-center py-12 space-y-4">
+                <AlertCircle className="h-12 w-12 text-red-500" />
+                <div className="text-center">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        Voice not found
+                    </h3>
+                    <p className="text-sm text-red-600 dark:text-red-400 mb-4 max-w-md">
+                        {message}
+                    </p>
+                    <div className="space-x-2">
+                        <Button onClick={onRetry} variant="outline">
+                            Try Again
+                        </Button>
+                        <Button asChild variant="default">
+                            <Link href="/voice">
+                                Browse Voices
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
+}
+
+// Utility function to format duration
+function formatDuration(seconds: number | null | undefined): string {
+    if (!seconds) return 'Unknown';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Utility function to format date
+function formatDate(date: string | Date): string {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
 }
 
 export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProps) {
@@ -168,7 +217,7 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
     const isOwner = voice ? voice.userId === userId : false;
 
     return (
-        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 md:px-8">
+        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 md:px-8">
             {loading && (
                 <div>
                     <div className="flex items-center justify-center mb-6">
@@ -184,63 +233,151 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
             )}
 
             {voice && !loading && !error && (
-                <div className="space-y-8">
-                    {/* Header */}
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                            {voice.name}
-                        </h1>
+                <div className="space-y-6">
+                    {/* Header Card with Voice Information */}
+                    <Card className="overflow-hidden">
+                        <CardHeader className="pb-4">
+                            <div className="flex items-start justify-between">
+                                <div className="space-y-2 flex-1">
+                                    <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+                                        {voice.name}
+                                    </CardTitle>
+                                    {voice.description && (
+                                        <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
+                                            {voice.description}
+                                        </p>
+                                    )}
+                                </div>
 
-                        {isOwner && (
-                            <div className="flex space-x-2">
-                                <Button variant="outline" asChild>
-                                    <Link href={`/voice/${voiceId}/edit`}>
-                                        Edit
-                                    </Link>
-                                </Button>
-                                <DeleteVoiceButton voiceId={voiceId} />
+                                {isOwner && (
+                                    <div className="flex space-x-2">
+                                        <Button variant="outline" size="sm" asChild>
+                                            <Link href={`/voice/${voiceId}/edit`}>
+                                                <Edit className="h-4 w-4 mr-1" />
+                                                Edit
+                                            </Link>
+                                        </Button>
+                                        <DeleteVoiceButton voiceId={voiceId} />
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
+                        </CardHeader>
 
-                    {/* Description */}
-                    {voice.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {voice.description}
-                        </p>
-                    )}
+                        <CardContent className="space-y-6">
+                            {/* Status Badges */}
+                            <div className="flex flex-wrap gap-2">
+                                <Badge variant={voice.isPublic ? "default" : "secondary"} className="flex items-center gap-1">
+                                    {voice.isPublic ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+                                    {voice.isPublic ? 'Public' : 'Private'}
+                                </Badge>
 
-                    {/* Voice Sample */}
-                    <div>
-                        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                            Voice Sample
-                        </h2>
-                        <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
-                            <VoicePlayer audioUrl={voice.audioSample} />
-                        </div>
-                    </div>
+                                {voice.gender && (
+                                    <Badge variant="outline" className="flex items-center gap-1">
+                                        <User className="h-3 w-3" />
+                                        {voice.gender}
+                                    </Badge>
+                                )}
 
-                    {/* Text-to-Speech */}
-                    <div>
-                        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                            Text-to-Speech
-                        </h2>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            Type or paste text below to convert it to speech using this voice.
-                        </p>
-                        <div className="space-y-3">
+                                {voice.genre && (
+                                    <Badge variant="outline" className="flex items-center gap-1">
+                                        <Tag className="h-3 w-3" />
+                                        {voice.genre.name}
+                                    </Badge>
+                                )}
+                            </div>
+
+                            {/* Voice Metadata Grid */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        <Clock className="h-3 w-3" />
+                                        Duration
+                                    </div>
+                                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                                        {formatDuration(voice.duration)}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        <User className="h-3 w-3" />
+                                        Creator
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Avatar className="h-5 w-5">
+                                            <AvatarImage src={voice.user.image || ''} alt={voice.user.name || 'User'} />
+                                            <AvatarFallback className="text-xs">
+                                                {(voice.user.name || 'A').charAt(0).toUpperCase()}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                                            {voice.user.name || 'Anonymous'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        <Calendar className="h-3 w-3" />
+                                        Created
+                                    </div>
+                                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                                        {formatDate(voice.createdAt)}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        <Calendar className="h-3 w-3" />
+                                        Updated
+                                    </div>
+                                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                                        {formatDate(voice.updatedAt)}
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Voice Sample Card */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-lg">
+                                <Volume2 className="h-5 w-5" />
+                                Voice Sample
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="p-6 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800">
+                                <VoicePlayer audioUrl={voice.audioSample} />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Text-to-Speech Card */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg">Text-to-Speech</CardTitle>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Type or paste text below to convert it to speech using this voice.
+                            </p>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                             <Textarea
                                 rows={4}
                                 placeholder="Enter text to convert to speech..."
-                                className="resize-none"
+                                className="resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 value={ttsText}
                                 onChange={(e) => setTtsText(e.target.value)}
                             />
-                            <div className="flex justify-end">
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    {ttsText.length} characters
+                                </span>
                                 <Button
-                                    variant="outline"
                                     onClick={handleGenerateSpeech}
                                     disabled={!ttsText.trim() || isGenerating}
+                                    className="min-w-[140px]"
                                 >
                                     {isGenerating ? (
                                         <div className="flex items-center gap-2">
@@ -248,25 +385,15 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                                             Generating...
                                         </div>
                                     ) : (
-                                        'Generate Speech'
+                                        <div className="flex items-center gap-2">
+                                            <Volume2 className="h-4 w-4" />
+                                            Generate Speech
+                                        </div>
                                     )}
                                 </Button>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
-                        <div className="flex items-center">
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                                Created by {voice.user.name || 'Anonymous'}
-                            </span>
-                            <span className="mx-2 text-gray-500 dark:text-gray-400">•</span>
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                                {voice.isPublic ? 'Public' : 'Private'} voice
-                            </span>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 </div>
             )}
         </div>

@@ -5,7 +5,6 @@ import { prisma } from '@/lib/db';
 import CommunityVoicesClient from '@/components/voice/CommunityVoicesClient';
 
 export default async function CommunityVoicesPage() {
-    // Server-side session handling
     const session = await getServerSession(authOptions);
 
     if (!session) {
@@ -13,12 +12,12 @@ export default async function CommunityVoicesPage() {
     }
 
     // Fetch public voices WITH genre relation
-    const publicVoices = await prisma.voice.findMany({
+    const publicVoicesRaw = await prisma.voice.findMany({
         where: {
             isPublic: true
         },
         include: {
-            genre: true, // ✅ Add this line to include the genre relation
+            genre: true,
             user: {
                 select: {
                     name: true,
@@ -30,6 +29,8 @@ export default async function CommunityVoicesPage() {
             updatedAt: 'desc'
         }
     });
+
+    const publicVoices = JSON.parse(JSON.stringify(publicVoicesRaw));
 
     return <CommunityVoicesClient initialVoices={publicVoices} />;
 }
