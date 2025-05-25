@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, AlertCircle } from "lucide-react";
 
 interface VoicePlayerProps {
     audioUrl: string;
@@ -14,6 +14,7 @@ export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerP
     const [duration, setDuration] = useState(recordedDuration || 0);
     const [currentTime, setCurrentTime] = useState(0);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
 
     // Reset state when audioUrl changes
@@ -22,6 +23,7 @@ export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerP
         setDuration(recordedDuration || 0);
         setCurrentTime(0);
         setIsLoaded(false);
+        setError(null); // Reset error state
     }, [audioUrl, recordedDuration]);
 
     useEffect(() => {
@@ -37,6 +39,7 @@ export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerP
                 setDuration(audio.duration);
                 setIsLoaded(true);
             }
+            setError(null); // Clear error if audio loads successfully
         };
 
         const setAudioTime = () => {
@@ -59,6 +62,7 @@ export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerP
             if (!recordedDuration) {
                 setIsLoaded(false);
             }
+            setError(null); // Clear error when starting to load
         };
 
         const handleCanPlay = () => {
@@ -66,6 +70,7 @@ export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerP
             if (!recordedDuration) {
                 setAudioData();
             }
+            setError(null); // Clear error if audio can play
         };
 
         const handleDurationChange = () => {
@@ -78,6 +83,8 @@ export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerP
         const handleError = (e: Event) => {
             console.error('Audio loading error:', e);
             setIsLoaded(false);
+            setIsPlaying(false);
+            setError("The audio file associated with this voice was not found. Please try again or upload a new one.");
             if (!recordedDuration) {
                 setDuration(0);
             }
@@ -116,7 +123,7 @@ export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerP
         e.stopPropagation();
 
         const audio = audioRef.current;
-        if (!audio) return;
+        if (!audio || error) return;
 
         try {
             if (isPlaying) {
@@ -134,9 +141,10 @@ export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerP
                     }
                 }
             }
-        } catch (error) {
-            console.error('Audio play error:', error);
+        } catch (playError) {
+            console.error('Audio play error:', playError);
             setIsPlaying(false);
+            setError("Unable to play this audio file. Please try again or upload a new one.");
         }
     };
 
@@ -144,7 +152,7 @@ export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerP
         e.stopPropagation();
 
         const audio = audioRef.current;
-        if (!audio) return;
+        if (!audio || error) return;
 
         const newTime = parseFloat(e.target.value);
         if (!isNaN(newTime) && newTime >= 0) {
@@ -156,8 +164,8 @@ export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerP
                 try {
                     audio.currentTime = newTime;
                     setCurrentTime(newTime);
-                } catch (error) {
-                    console.warn('Seeking failed:', error);
+                } catch (seekError) {
+                    console.warn('Seeking failed:', seekError);
                 }
             }
         }
@@ -180,37 +188,47 @@ export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerP
     return (
         <div className="rounded-md bg-gray-50 dark:bg-gray-800/50 p-4">
             <audio ref={audioRef} src={audioUrl} preload="metadata" />
-            <div className="flex items-center gap-4">
-                <Button
-                    type="button"
-                    size="icon"
-                    onClick={handlePlayPause}
-                    className="h-10 w-10 rounded-full flex-shrink-0"
-                    variant="default"
-                    disabled={!isReady}
-                >
-                    {isPlaying ? (
-                        <Pause className="h-5 w-5" />
-                    ) : (
-                        <Play className="h-5 w-5 ml-0.5" />
-                    )}
-                </Button>
-                <div className="flex-1 space-y-1">
-                    <input
-                        type="range"
-                        min="0"
-                        max={duration || 0}
-                        value={currentTime}
-                        onChange={handleTimeChange}
+
+            {error ? (
+                // Error state - show user-friendly message
+                <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
+                    <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                    <span className="text-sm">{error}</span>
+                </div>
+            ) : (
+                // Normal player UI
+                <div className="flex items-center gap-4">
+                    <Button
+                        type="button"
+                        size="icon"
+                        onClick={handlePlayPause}
+                        className="h-10 w-10 rounded-full flex-shrink-0"
+                        variant="default"
                         disabled={!isReady}
-                        className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700 accent-blue-600 dark:accent-blue-500 disabled:opacity-50"
-                    />
-                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                        <span>{formatTime(currentTime)}</span>
-                        <span>{formatTime(duration)}</span>
+                    >
+                        {isPlaying ? (
+                            <Pause className="h-5 w-5" />
+                        ) : (
+                            <Play className="h-5 w-5 ml-0.5" />
+                        )}
+                    </Button>
+                    <div className="flex-1 space-y-1">
+                        <input
+                            type="range"
+                            min="0"
+                            max={duration || 0}
+                            value={currentTime}
+                            onChange={handleTimeChange}
+                            disabled={!isReady}
+                            className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700 accent-blue-600 dark:accent-blue-500 disabled:opacity-50"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                            <span>{formatTime(currentTime)}</span>
+                            <span>{formatTime(duration)}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
