@@ -19,7 +19,8 @@ import {
     Globe,
     Lock,
     Edit,
-    Trash2
+    Trash2,
+    Settings
 } from 'lucide-react';
 import VoicePlayer from '@/components/voice/VoicePlayer';
 import DeleteVoiceButton from '@/components/voice/DeleteVoiceButton';
@@ -36,17 +37,11 @@ function VoiceViewSkeleton() {
             {/* Header Card Skeleton */}
             <Card>
                 <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between">
-                        <div className="space-y-3 flex-1 min-w-0"> {/* Added min-w-0 to prevent overflow */}
-                            {/* Responsive width instead of fixed w-64 */}
-                            <div className="h-8 w-full max-w-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                            {/* Responsive width instead of fixed w-48 */}
-                            <div className="h-4 w-full max-w-48 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                        </div>
-                        <div className="flex space-x-2 flex-shrink-0 ml-4"> {/* Added flex-shrink-0 and margin */}
-                            <div className="h-9 w-16 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
-                            <div className="h-9 w-16 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
-                        </div>
+                    <div className="space-y-3">
+                        {/* Responsive width instead of fixed w-64 */}
+                        <div className="h-8 w-full max-w-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        {/* Responsive width instead of fixed w-48 */}
+                        <div className="h-4 w-full max-w-48 bg-gray-200 dark:bg-gray-700 rounded"></div>
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -217,7 +212,7 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
     const isOwner = voice ? voice.userId === userId : false;
 
     return (
-        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 md:px-8">
+        <div className="mx-auto max-w-4xl">
             {loading && (
                 <div>
                     <div className="flex items-center justify-center mb-6">
@@ -234,31 +229,43 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
 
             {voice && !loading && !error && (
                 <div className="space-y-6">
+                    {/* Manage Section - Only visible to owner */}
+                    {isOwner && (
+                        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="flex items-center gap-2 text-lg text-blue-900 dark:text-blue-100">
+                                    <Settings className="h-5 w-5" />
+                                    Manage Voice
+                                </CardTitle>
+                                <p className="text-sm text-blue-700 dark:text-blue-300">
+                                    Edit your voice settings or remove it from your library.
+                                </p>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex flex-wrap gap-3">
+                                    <Button variant="outline" size="sm" asChild className="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        <Link href={`/voice/${voiceId}/edit`}>
+                                            <Edit className="h-4 w-4 mr-2" />
+                                            Edit Voice
+                                        </Link>
+                                    </Button>
+                                    <DeleteVoiceButton voiceId={voiceId} />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {/* Header Card with Voice Information */}
                     <Card className="overflow-hidden">
                         <CardHeader className="pb-4">
-                            <div className="flex items-start justify-between">
-                                <div className="space-y-2 flex-1">
-                                    <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
-                                        {voice.name}
-                                    </CardTitle>
-                                    {voice.description && (
-                                        <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
-                                            {voice.description}
-                                        </p>
-                                    )}
-                                </div>
-
-                                {isOwner && (
-                                    <div className="flex space-x-2">
-                                        <Button variant="outline" size="sm" asChild>
-                                            <Link href={`/voice/${voiceId}/edit`}>
-                                                <Edit className="h-4 w-4 mr-1" />
-                                                Edit
-                                            </Link>
-                                        </Button>
-                                        <DeleteVoiceButton voiceId={voiceId} />
-                                    </div>
+                            <div className="space-y-2">
+                                <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+                                    {voice.name}
+                                </CardTitle>
+                                {voice.description && (
+                                    <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
+                                        {voice.description}
+                                    </p>
                                 )}
                             </div>
                         </CardHeader>
