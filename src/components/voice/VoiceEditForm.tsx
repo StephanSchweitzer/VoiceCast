@@ -248,7 +248,7 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                             <VoicePlayer audioUrl={voice.audioSample} />
                         </div>
 
-                        <div className="flex justify-center pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex justify-center pt-6 border-t border-gray-200 dark:border-gray-700">
                             <ChangeVoiceButton
                                 voiceId={voice.id}
                                 onVoiceUpdated={onVoiceUpdated}
