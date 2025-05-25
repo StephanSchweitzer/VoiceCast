@@ -43,6 +43,7 @@ export interface VoiceWithUserAndGenre extends Voice {
 
 // For API responses that might include user info on public voices
 export interface VoiceWithOptionalUser extends Voice {
+    duration?: number | null;
     user?: {
         name: string | null;
         image?: string | null;

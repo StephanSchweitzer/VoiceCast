@@ -12,12 +12,13 @@ export default async function CommunityVoicesPage() {
         redirect('/auth/login');
     }
 
-    // Fetch public voices
+    // Fetch public voices WITH genre relation
     const publicVoices = await prisma.voice.findMany({
         where: {
             isPublic: true
         },
         include: {
+            genre: true, // ✅ Add this line to include the genre relation
             user: {
                 select: {
                     name: true,

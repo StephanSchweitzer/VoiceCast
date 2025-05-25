@@ -2,29 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { VoiceWithOptionalUser } from '@/types/voice';
+import { Genre } from '@/types/genres';
 
-// Define types
+// Define component-specific types only
 type ViewType = 'list' | 'grid';
 type GenderFilter = 'all' | 'male' | 'female' | 'other';
-type GenreFilter = 'all' | 'storytelling' | 'gaming' | 'educational' | 'assistant' | 'entertainment';
-
-interface Voice {
-    id: string;
-    name: string;
-    description: string | null;
-    audioSample: string;
-    isPublic: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    userId: string;
-    user: {
-        name: string | null;
-        image: string | null;
-    } | null;
-}
+type GenreFilter = 'all' | string; // Allow any genre ID
 
 interface CommunityVoicesClientProps {
-    initialVoices: Voice[];
+    initialVoices: VoiceWithOptionalUser[];
 }
 
 export default function CommunityVoicesClient({ initialVoices }: CommunityVoicesClientProps) {
@@ -35,6 +22,19 @@ export default function CommunityVoicesClient({ initialVoices }: CommunityVoices
     const [viewType, setViewType] = useState<ViewType>('grid');
     const [filteredVoices, setFilteredVoices] = useState(initialVoices);
 
+    // Extract unique genders and genres from the voices for filter options
+    const availableGenders = Array.from(new Set(
+        initialVoices
+            .map(voice => voice.gender?.toLowerCase())
+            .filter(Boolean)
+    )) as string[];
+
+    const availableGenres = Array.from(new Set(
+        initialVoices
+            .map(voice => voice.genre)
+            .filter(Boolean)
+    )) as NonNullable<VoiceWithOptionalUser['genre']>[];
+
     // Apply filters when any filter changes
     useEffect(() => {
         let results = initialVoices;
@@ -43,24 +43,62 @@ export default function CommunityVoicesClient({ initialVoices }: CommunityVoices
         if (searchQuery) {
             results = results.filter(voice =>
                 voice.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (voice.description && voice.description.toLowerCase().includes(searchQuery.toLowerCase()))
+                (voice.description && voice.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (voice.genre?.name && voice.genre.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (voice.gender && voice.gender.toLowerCase().includes(searchQuery.toLowerCase()))
             );
         }
 
-        // Apply gender filter (placeholder - would need gender field in schema)
+        // Apply gender filter
         if (genderFilter !== 'all') {
-            // This is a placeholder - you would filter based on an actual gender field
-            // results = results.filter(voice => voice.gender === genderFilter);
+            results = results.filter(voice =>
+                voice.gender?.toLowerCase() === genderFilter.toLowerCase()
+            );
         }
 
-        // Apply genre filter (placeholder - would need genre field in schema)
+        // Apply genre filter
         if (genreFilter !== 'all') {
-            // This is a placeholder - you would filter based on an actual genre field
-            // results = results.filter(voice => voice.genre === genreFilter);
+            results = results.filter(voice => voice.genre?.id === genreFilter);
         }
 
         setFilteredVoices(results);
     }, [searchQuery, genderFilter, genreFilter, initialVoices]);
+
+    // Helper function to format duration
+    const formatDuration = (duration: number | null) => {
+        if (!duration) return '';
+        const minutes = Math.floor(duration / 60);
+        const seconds = duration % 60;
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    };
+
+    // Helper function to get gender display color
+    const getGenderColor = (gender: string | null) => {
+        if (!gender) return 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-300';
+        switch (gender.toLowerCase()) {
+            case 'male':
+                return 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300';
+            case 'female':
+                return 'bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-300';
+            default:
+                return 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300';
+        }
+    };
+
+    // Helper function to get genre display color
+    const getGenreColor = (genre: NonNullable<VoiceWithOptionalUser['genre']>) => {
+        if (!genre) return 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-300';
+        // Generate consistent color based on genre name
+        const colors = [
+            'bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-300',
+            'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-300',
+            'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-300',
+            'bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-300',
+            'bg-cyan-100 dark:bg-cyan-900 text-cyan-800 dark:text-cyan-300',
+        ];
+        const index = genre.name.length % colors.length;
+        return colors[index];
+    };
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
@@ -87,7 +125,7 @@ export default function CommunityVoicesClient({ initialVoices }: CommunityVoices
                                 name="search"
                                 id="search"
                                 className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-12 sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
-                                placeholder="Search by name or description"
+                                placeholder="Search by name, description, genre, or gender"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -109,9 +147,11 @@ export default function CommunityVoicesClient({ initialVoices }: CommunityVoices
                                 onChange={(e) => setGenderFilter(e.target.value as GenderFilter)}
                             >
                                 <option value="all">All Genders</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="other">Other</option>
+                                {availableGenders.map((gender) => (
+                                    <option key={gender} value={gender}>
+                                        {gender.charAt(0).toUpperCase() + gender.slice(1)}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
@@ -125,14 +165,14 @@ export default function CommunityVoicesClient({ initialVoices }: CommunityVoices
                                 name="genre"
                                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                                 value={genreFilter}
-                                onChange={(e) => setGenreFilter(e.target.value as GenreFilter)}
+                                onChange={(e) => setGenreFilter(e.target.value)}
                             >
                                 <option value="all">All Genres</option>
-                                <option value="storytelling">Storytelling</option>
-                                <option value="gaming">Gaming</option>
-                                <option value="educational">Educational</option>
-                                <option value="assistant">Assistant</option>
-                                <option value="entertainment">Entertainment</option>
+                                {availableGenres.map((genre) => (
+                                    <option key={genre.id} value={genre.id}>
+                                        {genre.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
@@ -206,11 +246,16 @@ export default function CommunityVoicesClient({ initialVoices }: CommunityVoices
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="ml-3">
+                                        <div className="ml-3 flex-1">
                                             <h3 className="text-md font-medium text-gray-900 dark:text-white">{voice.name}</h3>
                                             <p className="text-xs text-gray-500 dark:text-gray-400">
                                                 By: {voice.user?.name || 'Anonymous'}
                                             </p>
+                                            {voice.duration && (
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                    Duration: {formatDuration(voice.duration)}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                     {voice.description && (
@@ -222,13 +267,16 @@ export default function CommunityVoicesClient({ initialVoices }: CommunityVoices
                                         <span className="rounded-full px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300">
                                             Public
                                         </span>
-                                        {/* Placeholder for gender and genre tags */}
-                                        <span className="rounded-full px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300">
-                                            {Math.random() > 0.5 ? 'Male' : 'Female'}
-                                        </span>
-                                        <span className="rounded-full px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300">
-                                            {['Storytelling', 'Gaming', 'Educational', 'Assistant'][Math.floor(Math.random() * 4)]}
-                                        </span>
+                                        {voice.gender && (
+                                            <span className={`rounded-full px-2 py-0.5 ${getGenderColor(voice.gender)}`}>
+                                                {voice.gender.charAt(0).toUpperCase() + voice.gender.slice(1)}
+                                            </span>
+                                        )}
+                                        {voice.genre && (
+                                            <span className={`rounded-full px-2 py-0.5 ${getGenreColor(voice.genre)}`}>
+                                                {voice.genre.name}
+                                            </span>
+                                        )}
                                     </div>
                                 </Link>
                             ))}
@@ -259,23 +307,29 @@ export default function CommunityVoicesClient({ initialVoices }: CommunityVoices
                                         </div>
                                         <div className="ml-4 flex-1">
                                             <div className="flex items-center justify-between">
-                                                <h3 className="text-lg font-medium text-gray-900 dark:text-white">{voice.name}</h3>
+                                                <div>
+                                                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">{voice.name}</h3>
+                                                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                                        By: {voice.user?.name || 'Anonymous'}
+                                                        {voice.duration && ` • Duration: ${formatDuration(voice.duration)}`}
+                                                    </p>
+                                                </div>
                                                 <div className="flex items-center flex-wrap gap-1">
                                                     <span className="rounded-full px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 text-xs">
                                                         Public
                                                     </span>
-                                                    {/* Placeholder for gender and genre tags */}
-                                                    <span className="rounded-full px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 text-xs">
-                                                        {Math.random() > 0.5 ? 'Male' : 'Female'}
-                                                    </span>
-                                                    <span className="rounded-full px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300 text-xs">
-                                                        {['Storytelling', 'Gaming', 'Educational', 'Assistant'][Math.floor(Math.random() * 4)]}
-                                                    </span>
+                                                    {voice.gender && (
+                                                        <span className={`rounded-full px-2 py-0.5 text-xs ${getGenderColor(voice.gender)}`}>
+                                                            {voice.gender.charAt(0).toUpperCase() + voice.gender.slice(1)}
+                                                        </span>
+                                                    )}
+                                                    {voice.genre && (
+                                                        <span className={`rounded-full px-2 py-0.5 text-xs ${getGenreColor(voice.genre)}`}>
+                                                            {voice.genre.name}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
-                                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                                By: {voice.user?.name || 'Anonymous'}
-                                            </p>
                                             {voice.description && (
                                                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                                     {voice.description}
