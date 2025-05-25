@@ -13,10 +13,28 @@ export default async function VoiceListPage() {
         redirect('/auth/login');
     }
 
-    // Fetch user's voices
+    // Fetch user's voices with genre information
     const userVoices = await prisma.voice.findMany({
         where: {
             userId: session.user.id
+        },
+        select: {
+            id: true,
+            name: true,
+            description: true,
+            isPublic: true,
+            audioSample: true,
+            duration: true,
+            gender: true,
+            createdAt: true,
+            updatedAt: true,
+            userId: true,
+            genre: {
+                select: {
+                    id: true,
+                    name: true
+                }
+            }
         },
         orderBy: {
             updatedAt: 'desc'
