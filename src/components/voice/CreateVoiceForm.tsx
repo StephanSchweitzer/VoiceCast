@@ -133,10 +133,10 @@ export default function CreateVoiceForm({ genres }: CreateVoiceFormProps) {
                                     value={formData.genreId}
                                     onValueChange={(value) => handleInputChange('genreId', value)}
                                 >
-                                    <SelectTrigger className="h-11 bg-white/80 dark:bg-gray-800/80 border-gray-200 dark:border-gray-700">
+                                    <SelectTrigger className="h-11 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                                         <SelectValue placeholder="Select a genre (optional)" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg">
                                         {genres.map((genre) => (
                                             <SelectItem key={genre.id} value={genre.id}>
                                                 {genre.name}
@@ -155,10 +155,10 @@ export default function CreateVoiceForm({ genres }: CreateVoiceFormProps) {
                                     value={formData.gender}
                                     onValueChange={(value) => handleInputChange('gender', value)}
                                 >
-                                    <SelectTrigger className="h-11 bg-white/80 dark:bg-gray-800/80 border-gray-200 dark:border-gray-700">
+                                    <SelectTrigger className="h-11 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                                         <SelectValue placeholder="Select gender (optional)" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg">
                                         {GENDER_OPTIONS.map((gender) => (
                                             <SelectItem key={gender} value={gender}>
                                                 {gender}
