@@ -38,7 +38,7 @@ export default function Sidebar() {
 
     const adminNavItems = [
         { href: '/admin', label: 'Admin Dashboard', icon: '📊' },
-        { href: '/admin/genres', label: 'Manage Genres', icon: '🏷️' },
+        //{ href: '/admin/genres', label: 'Manage Genres', icon: '🏷️' },
         // Add more admin items here as you build them
         // { href: '/admin/voices', label: 'Manage Voices', icon: '🎤' },
         // { href: '/admin/users', label: 'Manage Users', icon: '👥' },
