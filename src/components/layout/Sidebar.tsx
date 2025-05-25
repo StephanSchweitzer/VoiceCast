@@ -66,7 +66,7 @@ export default function Sidebar() {
 
             {/* Sidebar - with smooth transition for sliding */}
             <aside
-                className={`fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-30 ${topPadding} overflow-y-auto transform transition-transform duration-300 ease-in-out ${
+                className={`fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-30 ${topPadding} overflow-y-auto overscroll-contain transform transition-transform duration-300 ease-in-out ${
                     isOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
             >
@@ -187,7 +187,7 @@ export default function Sidebar() {
                 </div>
 
                 {/* User actions for mobile */}
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 md:hidden">
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 md:hidden pb-8">
                     {session ? (
                         <div className="space-y-2">
                             <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
