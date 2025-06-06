@@ -8,6 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Loader2,
     AlertCircle,
@@ -20,15 +23,25 @@ import {
     Lock,
     Edit,
     Trash2,
-    Settings
+    Settings,
+    Download,
+    Play
 } from 'lucide-react';
 import VoicePlayer from '@/components/voice/VoicePlayer';
 import DeleteVoiceButton from '@/components/voice/DeleteVoiceButton';
 import { VoiceWithUser } from '@/types/voice';
+// Removed @gradio/client import - now using API route
 
 interface VoiceViewClientProps {
     voiceId: string;
     userId: string;
+}
+
+interface TTSParameters {
+    exaggeration: number;
+    temperature: number;
+    seed: number;
+    cfgw: number;
 }
 
 function VoiceViewSkeleton() {
@@ -141,7 +154,18 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
     const [error, setError] = useState<string | null>(null);
     const [ttsText, setTtsText] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
+    const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
+    const [ttsError, setTtsError] = useState<string | null>(null);
+    const [showAdvanced, setShowAdvanced] = useState(false);
     const router = useRouter();
+
+    // TTS Parameters
+    const [ttsParams, setTtsParams] = useState<TTSParameters>({
+        exaggeration: 0.5,
+        temperature: 0.8,
+        seed: 0,
+        cfgw: 0.5
+    });
 
     const loadVoice = async () => {
         try {
@@ -191,17 +215,67 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
     }, [voiceId, userId]);
 
     const handleGenerateSpeech = async () => {
-        if (!ttsText.trim() || !voice) return;
+        if (!ttsText.trim() || !voice || !voice.audioSample) return;
 
         setIsGenerating(true);
+        setTtsError(null);
+        setGeneratedAudioUrl(null);
+
         try {
-            // Add your TTS API call here
-            console.log('Generating speech for:', ttsText);
-            // Example: await generateSpeech(voice.id, ttsText);
+            // Call our API route instead of Gradio directly
+            const response = await fetch('/api/tts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: ttsText,
+                    audioSampleUrl: voice.audioSample,
+                    exaggeration: ttsParams.exaggeration,
+                    temperature: ttsParams.temperature,
+                    seed: ttsParams.seed,
+                    cfgw: ttsParams.cfgw,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to generate speech');
+            }
+
+            if (result.success && result.audioUrl) {
+                setGeneratedAudioUrl(result.audioUrl);
+            } else {
+                throw new Error('No audio URL received from the API');
+            }
+
         } catch (error) {
             console.error('Error generating speech:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Failed to generate speech';
+            setTtsError(errorMessage);
         } finally {
             setIsGenerating(false);
+        }
+    };
+
+    const handleDownloadAudio = async () => {
+        if (!generatedAudioUrl) return;
+
+        try {
+            const response = await fetch(generatedAudioUrl);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${voice?.name || 'generated'}_tts_${Date.now()}.wav`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error('Error downloading audio:', error);
         }
     };
 
@@ -366,7 +440,7 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                         <CardHeader>
                             <CardTitle className="text-lg">Text-to-Speech</CardTitle>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Type or paste text below to convert it to speech using this voice.
+                                Type or paste text below to convert it to speech using this voice. Maximum 300 characters.
                             </p>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -375,15 +449,104 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                                 placeholder="Enter text to convert to speech..."
                                 className="resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 value={ttsText}
-                                onChange={(e) => setTtsText(e.target.value)}
+                                onChange={(e) => setTtsText(e.target.value.slice(0, 300))}
+                                maxLength={300}
                             />
+
                             <div className="flex justify-between items-center">
                                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    {ttsText.length} characters
+                                    {ttsText.length}/300 characters
                                 </span>
                                 <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setShowAdvanced(!showAdvanced)}
+                                >
+                                    {showAdvanced ? 'Hide' : 'Show'} Advanced Settings
+                                </Button>
+                            </div>
+
+                            {/* Advanced Settings */}
+                            {showAdvanced && (
+                                <div className="border rounded-lg p-4 space-y-4 bg-gray-50 dark:bg-gray-900">
+                                    <h4 className="font-medium text-sm">Advanced Parameters</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="exaggeration" className="text-xs">
+                                                Exaggeration: {ttsParams.exaggeration}
+                                            </Label>
+                                            <Slider
+                                                id="exaggeration"
+                                                min={0}
+                                                max={1}
+                                                step={0.05}
+                                                value={[ttsParams.exaggeration]}
+                                                onValueChange={([value]) =>
+                                                    setTtsParams(prev => ({ ...prev, exaggeration: value }))
+                                                }
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="temperature" className="text-xs">
+                                                Temperature: {ttsParams.temperature}
+                                            </Label>
+                                            <Slider
+                                                id="temperature"
+                                                min={0}
+                                                max={1}
+                                                step={0.05}
+                                                value={[ttsParams.temperature]}
+                                                onValueChange={([value]) =>
+                                                    setTtsParams(prev => ({ ...prev, temperature: value }))
+                                                }
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="seed" className="text-xs">
+                                                Random Seed (0 for random)
+                                            </Label>
+                                            <Input
+                                                id="seed"
+                                                type="number"
+                                                min={0}
+                                                value={ttsParams.seed}
+                                                onChange={(e) =>
+                                                    setTtsParams(prev => ({ ...prev, seed: parseInt(e.target.value) || 0 }))
+                                                }
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="cfgw" className="text-xs">
+                                                CFG/Pace: {ttsParams.cfgw}
+                                            </Label>
+                                            <Slider
+                                                id="cfgw"
+                                                min={0}
+                                                max={1}
+                                                step={0.05}
+                                                value={[ttsParams.cfgw]}
+                                                onValueChange={([value]) =>
+                                                    setTtsParams(prev => ({ ...prev, cfgw: value }))
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {ttsError && (
+                                <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                                    <div className="flex items-center gap-2">
+                                        <AlertCircle className="h-4 w-4 text-red-500" />
+                                        <span className="text-sm text-red-700 dark:text-red-300">{ttsError}</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex justify-end">
+                                <Button
                                     onClick={handleGenerateSpeech}
-                                    disabled={!ttsText.trim() || isGenerating}
+                                    disabled={!ttsText.trim() || isGenerating || !voice.audioSample}
                                     className="min-w-[140px]"
                                 >
                                     {isGenerating ? (
@@ -401,6 +564,37 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Generated Audio Card */}
+                    {generatedAudioUrl && (
+                        <Card className="border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-lg text-green-900 dark:text-green-100">
+                                    <Play className="h-5 w-5" />
+                                    Generated Audio
+                                </CardTitle>
+                                <p className="text-sm text-green-700 dark:text-green-300">
+                                    Your text has been successfully converted to speech using this voice.
+                                </p>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="p-4 rounded-lg bg-white dark:bg-gray-900 border">
+                                    <VoicePlayer audioUrl={generatedAudioUrl} />
+                                </div>
+                                <div className="flex justify-end">
+                                    <Button
+                                        onClick={handleDownloadAudio}
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex items-center gap-2"
+                                    >
+                                        <Download className="h-4 w-4" />
+                                        Download Audio
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
             )}
         </div>
