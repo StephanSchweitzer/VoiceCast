@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -80,14 +80,6 @@ export default function VoiceEditClient({ voiceId }: VoiceEditClientProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
-    const isUnmountedRef = useRef(false);
-
-    // Cleanup on unmount
-    useEffect(() => {
-        return () => {
-            isUnmountedRef.current = true;
-        };
-    }, []);
 
     const loadData = useCallback(async () => {
         try {
@@ -116,31 +108,19 @@ export default function VoiceEditClient({ voiceId }: VoiceEditClientProps) {
                 genresData = await genresResponse.json();
             }
 
-            // Only update state if component is still mounted
-            if (!isUnmountedRef.current) {
-                setVoice(voiceData);
-                setGenres(genresData);
-            }
+            setVoice(voiceData);
+            setGenres(genresData);
 
         } catch (err) {
             console.error('Error loading edit data:', err);
             const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-
-            if (!isUnmountedRef.current) {
-                setError(errorMessage);
-            }
+            setError(errorMessage);
 
             if (errorMessage.includes('permission')) {
-                setTimeout(() => {
-                    if (!isUnmountedRef.current) {
-                        router.push('/voice');
-                    }
-                }, 2000);
+                setTimeout(() => router.push('/voice'), 2000);
             }
         } finally {
-            if (!isUnmountedRef.current) {
-                setLoading(false);
-            }
+            setLoading(false);
         }
     }, [voiceId, router]);
 
@@ -152,20 +132,11 @@ export default function VoiceEditClient({ voiceId }: VoiceEditClientProps) {
         router.push(`/voice/${voiceId}`);
     };
 
-    // SIMPLIFIED voice update callback that can't interfere with dialog closure
+    // VERY simple callback - just refresh the page
     const handleVoiceUpdated = useCallback(() => {
-        console.log('Voice sample updated, scheduling refresh...');
-
-        // Don't do any immediate async operations or state updates
-        // Just schedule a simple refresh for later
-        setTimeout(() => {
-            // Only refresh if component is still mounted
-            if (!isUnmountedRef.current) {
-                console.log('Refreshing voice data...');
-                loadData().catch(console.error);
-            }
-        }, 500); // Give dialog time to fully close
-    }, [loadData]);
+        console.log('Voice updated, refreshing page...');
+        window.location.reload();
+    }, []);
 
     return (
         <div className="mx-auto max-w-3xl px-4">
