@@ -132,11 +132,48 @@ export default function VoiceEditClient({ voiceId }: VoiceEditClientProps) {
         router.push(`/voice/${voiceId}`);
     };
 
-    // VERY simple callback - just refresh the page
-    const handleVoiceUpdated = useCallback(() => {
-        console.log('Voice updated, refreshing page...');
-        window.location.reload();
-    }, []);
+    // Robust voice update callback that can't hang or block dialog closure
+    const handleVoiceUpdated = useCallback(async () => {
+        console.log('Voice sample updated, refreshing data...');
+
+        try {
+            // Add timeout to prevent hanging
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+            const voiceResponse = await fetch(`/api/voices/${voiceId}`, {
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (voiceResponse.ok) {
+                const updatedVoice: VoiceWithUserAndGenre = await voiceResponse.json();
+                setVoice(updatedVoice);
+                console.log('Voice data refreshed successfully');
+            } else {
+                console.error('Failed to refresh voice data:', voiceResponse.status);
+                // Don't throw error - just log it
+            }
+        } catch (err) {
+            console.error('Error refreshing voice data:', err);
+
+            // For AbortError (timeout), don't retry
+            if (err instanceof Error && err.name === 'AbortError') {
+                console.warn('Voice refresh timed out, but continuing...');
+                return;
+            }
+
+            // For other errors, try fallback refresh but don't block
+            try {
+                setTimeout(() => {
+                    loadData().catch(console.error);
+                }, 1000);
+            } catch (fallbackError) {
+                console.error('Fallback refresh also failed:', fallbackError);
+            }
+        }
+    }, [voiceId, loadData]);
 
     return (
         <div className="mx-auto max-w-3xl px-4">
