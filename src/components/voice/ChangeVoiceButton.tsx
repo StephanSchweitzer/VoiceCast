@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     Dialog,
@@ -11,13 +11,13 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Upload } from "lucide-react";
+import { AlertTriangle, Upload, X } from "lucide-react";
 import { toast } from 'sonner';
 import AudioUploader from '@/components/voice/AudioUploader';
 
 interface ChangeVoiceButtonProps {
     voiceId: string;
-    onVoiceUpdated?: () => void; // Add callback for when voice is updated
+    onVoiceUpdated?: () => void;
 }
 
 export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoiceButtonProps) {
@@ -26,39 +26,55 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [showUploader, setShowUploader] = useState(false);
 
-    // Properly handle confirmation dialog closing
+    // Safety timeout to reset updating state if it gets stuck
+    useEffect(() => {
+        if (isUpdating) {
+            const timeout = setTimeout(() => {
+                console.warn('Updating state was stuck, resetting...');
+                setIsUpdating(false);
+            }, 30000); // 30 second timeout
+
+            return () => clearTimeout(timeout);
+        }
+    }, [isUpdating]);
+
+    // Always allow closing confirmation dialog
     const handleConfirmationClose = useCallback((open: boolean) => {
         if (!open) {
             setShowConfirmation(false);
         }
     }, []);
 
-    // Properly handle uploader dialog closing
+    // Always allow closing uploader dialog - remove the isUpdating restriction
     const handleUploaderClose = useCallback((open: boolean) => {
-        if (!open && !isUpdating) {
+        if (!open) {
+            // If we're updating, warn the user but still allow closing
+            if (isUpdating) {
+                toast.info('Upload cancelled');
+                setIsUpdating(false);
+            }
             setShowUploader(false);
         }
     }, [isUpdating]);
 
-    // Handle the transition from confirmation to uploader
     const handleConfirmChange = useCallback(() => {
         setShowConfirmation(false);
-        // Small delay to ensure clean transition between dialogs
         setTimeout(() => {
             setShowUploader(true);
         }, 100);
     }, []);
 
-    // Handle manual cancel of confirmation
     const handleCancelConfirmation = useCallback(() => {
         setShowConfirmation(false);
     }, []);
 
-    // Handle manual cancel of uploader
+    // Allow cancelling even during upload
     const handleCancelUploader = useCallback(() => {
-        if (!isUpdating) {
-            setShowUploader(false);
+        if (isUpdating) {
+            toast.info('Upload cancelled');
+            setIsUpdating(false);
         }
+        setShowUploader(false);
     }, [isUpdating]);
 
     const handleAudioUploaded = async (audioUrl: string) => {
@@ -74,23 +90,35 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
             });
 
             if (!response.ok) {
-                throw new Error('Failed to update voice audio');
+                const errorData = await response.text();
+                throw new Error(`Failed to update voice audio: ${response.status} ${errorData}`);
             }
 
             setShowUploader(false);
             toast.success('Voice sample updated successfully!');
 
-            // Call the callback to refresh parent components
             if (onVoiceUpdated) {
                 onVoiceUpdated();
             } else {
-                // Fallback to router refresh if no callback provided
                 router.refresh();
             }
         } catch (error) {
             console.error('Error updating voice audio:', error);
-            toast.error('Failed to update voice sample. Please try again.');
+
+            // More specific error handling
+            if (error instanceof Error) {
+                if (error.message.includes('404')) {
+                    toast.error('Voice not found. It may have been deleted.');
+                } else if (error.message.includes('400')) {
+                    toast.error('Invalid audio file. Please try a different file.');
+                } else {
+                    toast.error('Failed to update voice sample. Please try again.');
+                }
+            } else {
+                toast.error('An unexpected error occurred. Please try again.');
+            }
         } finally {
+            // Always reset the updating state
             setIsUpdating(false);
         }
     };
@@ -144,24 +172,42 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
             <Dialog open={showUploader} onOpenChange={handleUploaderClose}>
                 <DialogContent
                     className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-lg max-w-2xl"
-                    onInteractOutside={(e) => {
-                        // Prevent closing when clicking outside if updating
+                    // Remove the restrictions that prevent closing
+                    onInteractOutside={() => {
+                        // Always allow closing by clicking outside
                         if (isUpdating) {
-                            e.preventDefault();
+                            toast.info('Upload cancelled');
+                            setIsUpdating(false);
                         }
+                        setShowUploader(false);
                     }}
-                    onEscapeKeyDown={(e) => {
-                        // Prevent closing with escape key if updating
+                    onEscapeKeyDown={() => {
+                        // Always allow closing with escape key
                         if (isUpdating) {
-                            e.preventDefault();
+                            toast.info('Upload cancelled');
+                            setIsUpdating(false);
                         }
+                        setShowUploader(false);
                     }}
                 >
                     <DialogHeader>
-                        <DialogTitle>Upload New Voice Sample</DialogTitle>
-                        <DialogDescription>
-                            Upload a new audio file or record one to update this voice.
-                        </DialogDescription>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <DialogTitle>Upload New Voice Sample</DialogTitle>
+                                <DialogDescription>
+                                    Upload a new audio file or record one to update this voice.
+                                </DialogDescription>
+                            </div>
+                            {/* Manual close button for extra safety */}
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleCancelUploader}
+                                className="h-8 w-8 p-0"
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
                     </DialogHeader>
                     <div className="py-4">
                         <AudioUploader
@@ -173,9 +219,9 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
                         <Button
                             variant="outline"
                             onClick={handleCancelUploader}
-                            disabled={isUpdating}
+                            // Don't disable the cancel button even during upload
                         >
-                            Cancel
+                            {isUpdating ? 'Cancel Upload' : 'Cancel'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
