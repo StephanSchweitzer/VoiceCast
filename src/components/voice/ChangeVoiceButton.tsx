@@ -38,6 +38,32 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
         }
     }, [isUpdating]);
 
+    // Global error handler for unhandled promise rejections that might occur in AudioUploader
+    useEffect(() => {
+        const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+            console.error('Unhandled promise rejection in AudioUploader context:', event.reason);
+
+            // If dialog is open and there's an error, provide user with recovery option
+            if (showUploader) {
+                toast.error('An error occurred. You can force close this dialog if needed.');
+                setIsUpdating(false);
+            }
+        };
+
+        window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+        return () => {
+            window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+        };
+    }, [showUploader]);
+
+    // Force close function that overrides everything - declare first
+    const forceCloseUploader = useCallback(() => {
+        setIsUpdating(false);
+        setShowUploader(false);
+        setShowConfirmation(false);
+    }, []);
+
     // Always allow closing confirmation dialog
     const handleConfirmationClose = useCallback((open: boolean) => {
         if (!open) {
@@ -45,17 +71,16 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
         }
     }, []);
 
-    // Always allow closing uploader dialog - remove the isUpdating restriction
+    // Force close the uploader dialog regardless of any child component state
     const handleUploaderClose = useCallback((open: boolean) => {
         if (!open) {
-            // If we're updating, warn the user but still allow closing
+            // Force close regardless of state
             if (isUpdating) {
                 toast.info('Upload cancelled');
-                setIsUpdating(false);
             }
-            setShowUploader(false);
+            forceCloseUploader();
         }
-    }, [isUpdating]);
+    }, [isUpdating, forceCloseUploader]);
 
     const handleConfirmChange = useCallback(() => {
         setShowConfirmation(false);
@@ -72,10 +97,9 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
     const handleCancelUploader = useCallback(() => {
         if (isUpdating) {
             toast.info('Upload cancelled');
-            setIsUpdating(false);
         }
-        setShowUploader(false);
-    }, [isUpdating]);
+        forceCloseUploader();
+    }, [isUpdating, forceCloseUploader]);
 
     const handleAudioUploaded = async (audioUrl: string) => {
         setIsUpdating(true);
@@ -172,22 +196,20 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
             <Dialog open={showUploader} onOpenChange={handleUploaderClose}>
                 <DialogContent
                     className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-lg max-w-2xl"
-                    // Remove the restrictions that prevent closing
-                    onInteractOutside={() => {
-                        // Always allow closing by clicking outside
+                    // Force close on any outside interaction
+                    onInteractOutside={(e) => {
+                        // Don't prevent default - always allow closing
                         if (isUpdating) {
                             toast.info('Upload cancelled');
-                            setIsUpdating(false);
                         }
-                        setShowUploader(false);
+                        forceCloseUploader();
                     }}
-                    onEscapeKeyDown={() => {
-                        // Always allow closing with escape key
+                    onEscapeKeyDown={(e) => {
+                        // Don't prevent default - always allow closing
                         if (isUpdating) {
                             toast.info('Upload cancelled');
-                            setIsUpdating(false);
                         }
-                        setShowUploader(false);
+                        forceCloseUploader();
                     }}
                 >
                     <DialogHeader>
@@ -202,7 +224,7 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={handleCancelUploader}
+                                onClick={forceCloseUploader}
                                 className="h-8 w-8 p-0"
                             >
                                 <X className="h-4 w-4" />
@@ -210,10 +232,28 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
                         </div>
                     </DialogHeader>
                     <div className="py-4">
-                        <AudioUploader
-                            onAudioUploadedAction={handleAudioUploaded}
-                            isLoading={isUpdating}
-                        />
+                        {/* Wrap AudioUploader in error boundary logic */}
+                        <div key={showUploader ? 'uploader-active' : 'uploader-inactive'}>
+                            <AudioUploader
+                                onAudioUploadedAction={handleAudioUploaded}
+                                isLoading={isUpdating}
+                            />
+                        </div>
+
+                        {/* Emergency close button if AudioUploader fails */}
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                Having trouble? You can force close this dialog:
+                            </p>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={forceCloseUploader}
+                                className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+                            >
+                                Force Close Dialog
+                            </Button>
+                        </div>
                     </div>
                     <DialogFooter>
                         <Button
