@@ -132,25 +132,46 @@ export default function VoiceEditClient({ voiceId }: VoiceEditClientProps) {
         router.push(`/voice/${voiceId}`);
     };
 
-    // This function will be called when the voice sample is updated
+    // Robust voice update callback that can't hang or block dialog closure
     const handleVoiceUpdated = useCallback(async () => {
         console.log('Voice sample updated, refreshing data...');
 
         try {
-            // Only fetch the voice data, not genres (they don't change)
-            const voiceResponse = await fetch(`/api/voices/${voiceId}`);
+            // Add timeout to prevent hanging
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+            const voiceResponse = await fetch(`/api/voices/${voiceId}`, {
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
 
             if (voiceResponse.ok) {
                 const updatedVoice: VoiceWithUserAndGenre = await voiceResponse.json();
                 setVoice(updatedVoice);
                 console.log('Voice data refreshed successfully');
             } else {
-                console.error('Failed to refresh voice data');
+                console.error('Failed to refresh voice data:', voiceResponse.status);
+                // Don't throw error - just log it
             }
         } catch (err) {
             console.error('Error refreshing voice data:', err);
-            // Fallback to full reload if individual refresh fails
-            loadData();
+
+            // For AbortError (timeout), don't retry
+            if (err instanceof Error && err.name === 'AbortError') {
+                console.warn('Voice refresh timed out, but continuing...');
+                return;
+            }
+
+            // For other errors, try fallback refresh but don't block
+            try {
+                setTimeout(() => {
+                    loadData().catch(console.error);
+                }, 1000);
+            } catch (fallbackError) {
+                console.error('Fallback refresh also failed:', fallbackError);
+            }
         }
     }, [voiceId, loadData]);
 

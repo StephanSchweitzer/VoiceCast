@@ -118,16 +118,34 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
                 throw new Error(`Failed to update voice audio: ${response.status} ${errorData}`);
             }
 
+            // Always close the dialog first, regardless of callback success
             setShowUploader(false);
+            setIsUpdating(false);
             toast.success('Voice sample updated successfully!');
 
+            // Then attempt to refresh parent data, but don't block dialog closing
             if (onVoiceUpdated) {
-                onVoiceUpdated();
+                // Run callback asynchronously without blocking
+                setTimeout(() => {
+                    try {
+                        onVoiceUpdated();
+                    } catch (error) {
+                        console.error('Error in onVoiceUpdated callback:', error);
+                        // Don't show error to user, just log it
+                    }
+                }, 100);
             } else {
-                router.refresh();
+                // Fallback to router refresh if no callback provided
+                setTimeout(() => {
+                    router.refresh();
+                }, 100);
             }
         } catch (error) {
             console.error('Error updating voice audio:', error);
+
+            // Always close the dialog first, then show error
+            setShowUploader(false);
+            setIsUpdating(false);
 
             // More specific error handling
             if (error instanceof Error) {
@@ -141,9 +159,6 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
             } else {
                 toast.error('An unexpected error occurred. Please try again.');
             }
-        } finally {
-            // Always reset the updating state
-            setIsUpdating(false);
         }
     };
 
