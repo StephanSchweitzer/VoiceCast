@@ -32,18 +32,16 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
         setIsMounted(true);
     }, []);
 
-    // Force close everything with proper cleanup
+    // Force close everything with better cleanup
     const forceClose = useCallback(() => {
         console.log('Force closing dialog');
 
-        // Reset all states synchronously
-        setIsUpdating(false);
-        setIsDialogOpen(false);
-
-        // Reset uploader key after a brief delay to ensure cleanup
+        // Use React's batch update to ensure all state changes happen together
         setTimeout(() => {
+            setIsUpdating(false);
+            setIsDialogOpen(false);
             setUploaderKey(prev => prev + 1);
-        }, 100);
+        }, 0);
     }, []);
 
     // Safety timeout with better cleanup
@@ -65,9 +63,10 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
             if (isUpdating) {
                 toast.info('Upload cancelled');
             }
+            // Force close regardless of any other state
             forceClose();
         }
-    }, [isUpdating, forceClose, isMounted]);
+    }, [forceClose, isMounted, isUpdating]);
 
     // Button click - ensure clean state before opening
     const handleButtonClick = useCallback(() => {
@@ -109,23 +108,25 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
                 throw new Error(`Failed to update voice audio: ${response.status} ${errorData}`);
             }
 
-            // Success - close dialog and show message
+            // Success - close dialog FIRST, then handle updates
             forceClose();
             toast.success('Voice sample updated successfully!');
 
-            // Refresh parent data
+            // Call the callback AFTER dialog is closed, without blocking
             if (onVoiceUpdated) {
+                // Don't await this - let it run in background
                 setTimeout(() => {
                     try {
                         onVoiceUpdated();
                     } catch (error) {
                         console.error('Error in onVoiceUpdated callback:', error);
+                        // Don't re-throw - just log
                     }
-                }, 100);
+                }, 250); // Give dialog more time to close
             } else {
                 setTimeout(() => {
                     router.refresh();
-                }, 100);
+                }, 250);
             }
         } catch (error) {
             console.error('Error updating voice audio:', error);
@@ -180,13 +181,16 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
                 <DialogContent
                     className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-lg max-w-2xl"
                     onInteractOutside={(e) => {
-                        e.preventDefault();
+                        // Always allow closing
                         handleDialogClose(false);
                     }}
                     onEscapeKeyDown={(e) => {
-                        e.preventDefault();
+                        // Always allow closing
                         handleDialogClose(false);
                     }}
+                    // Add these props to prevent dialog from getting stuck
+                    data-state={isDialogOpen ? 'open' : 'closed'}
+                    style={{ pointerEvents: isDialogOpen ? 'auto' : 'none' }}
                 >
                     <DialogHeader>
                         <DialogTitle>Upload New Voice Sample</DialogTitle>

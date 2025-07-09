@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -80,6 +80,14 @@ export default function VoiceEditClient({ voiceId }: VoiceEditClientProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const isUnmountedRef = useRef(false);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            isUnmountedRef.current = true;
+        };
+    }, []);
 
     const loadData = useCallback(async () => {
         try {
@@ -108,19 +116,31 @@ export default function VoiceEditClient({ voiceId }: VoiceEditClientProps) {
                 genresData = await genresResponse.json();
             }
 
-            setVoice(voiceData);
-            setGenres(genresData);
+            // Only update state if component is still mounted
+            if (!isUnmountedRef.current) {
+                setVoice(voiceData);
+                setGenres(genresData);
+            }
 
         } catch (err) {
             console.error('Error loading edit data:', err);
             const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-            setError(errorMessage);
+
+            if (!isUnmountedRef.current) {
+                setError(errorMessage);
+            }
 
             if (errorMessage.includes('permission')) {
-                setTimeout(() => router.push('/voice'), 2000);
+                setTimeout(() => {
+                    if (!isUnmountedRef.current) {
+                        router.push('/voice');
+                    }
+                }, 2000);
             }
         } finally {
-            setLoading(false);
+            if (!isUnmountedRef.current) {
+                setLoading(false);
+            }
         }
     }, [voiceId, router]);
 
@@ -132,48 +152,20 @@ export default function VoiceEditClient({ voiceId }: VoiceEditClientProps) {
         router.push(`/voice/${voiceId}`);
     };
 
-    // Robust voice update callback that can't hang or block dialog closure
-    const handleVoiceUpdated = useCallback(async () => {
-        console.log('Voice sample updated, refreshing data...');
+    // SIMPLIFIED voice update callback that can't interfere with dialog closure
+    const handleVoiceUpdated = useCallback(() => {
+        console.log('Voice sample updated, scheduling refresh...');
 
-        try {
-            // Add timeout to prevent hanging
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-
-            const voiceResponse = await fetch(`/api/voices/${voiceId}`, {
-                signal: controller.signal
-            });
-
-            clearTimeout(timeoutId);
-
-            if (voiceResponse.ok) {
-                const updatedVoice: VoiceWithUserAndGenre = await voiceResponse.json();
-                setVoice(updatedVoice);
-                console.log('Voice data refreshed successfully');
-            } else {
-                console.error('Failed to refresh voice data:', voiceResponse.status);
-                // Don't throw error - just log it
+        // Don't do any immediate async operations or state updates
+        // Just schedule a simple refresh for later
+        setTimeout(() => {
+            // Only refresh if component is still mounted
+            if (!isUnmountedRef.current) {
+                console.log('Refreshing voice data...');
+                loadData().catch(console.error);
             }
-        } catch (err) {
-            console.error('Error refreshing voice data:', err);
-
-            // For AbortError (timeout), don't retry
-            if (err instanceof Error && err.name === 'AbortError') {
-                console.warn('Voice refresh timed out, but continuing...');
-                return;
-            }
-
-            // For other errors, try fallback refresh but don't block
-            try {
-                setTimeout(() => {
-                    loadData().catch(console.error);
-                }, 1000);
-            } catch (fallbackError) {
-                console.error('Fallback refresh also failed:', fallbackError);
-            }
-        }
-    }, [voiceId, loadData]);
+        }, 500); // Give dialog time to fully close
+    }, [loadData]);
 
     return (
         <div className="mx-auto max-w-3xl px-4">
