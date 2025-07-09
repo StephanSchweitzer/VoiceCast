@@ -147,7 +147,7 @@ export default function LoginForm({
                         <Button
                             type="submit"
                             disabled={loading || !email || !password}
-                            className="w-full h-10 text-sm font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                            className="w-full h-10 text-sm font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 hover:border-blue-700 shadow-sm disabled:bg-gray-400 disabled:border-gray-400 disabled:text-white disabled:cursor-not-allowed"
                         >
                             {loading ? (
                                 <>
