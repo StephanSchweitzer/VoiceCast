@@ -25,16 +25,28 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
     const [isUpdating, setIsUpdating] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [uploaderKey, setUploaderKey] = useState(0);
+    const [isMounted, setIsMounted] = useState(false);
 
-    // Force close everything
-    const forceClose = useCallback(() => {
-        console.log('Force closing dialog');
-        setIsUpdating(false);
-        setIsDialogOpen(false);
-        setUploaderKey(prev => prev + 1);
+    // Fix hydration issues
+    useEffect(() => {
+        setIsMounted(true);
     }, []);
 
-    // Safety timeout
+    // Force close everything with proper cleanup
+    const forceClose = useCallback(() => {
+        console.log('Force closing dialog');
+
+        // Reset all states synchronously
+        setIsUpdating(false);
+        setIsDialogOpen(false);
+
+        // Reset uploader key after a brief delay to ensure cleanup
+        setTimeout(() => {
+            setUploaderKey(prev => prev + 1);
+        }, 100);
+    }, []);
+
+    // Safety timeout with better cleanup
     useEffect(() => {
         if (isUpdating) {
             const timeout = setTimeout(() => {
@@ -47,23 +59,31 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
         }
     }, [isUpdating, forceClose]);
 
-    // Handle dialog close
+    // Handle dialog close with better state management
     const handleDialogClose = useCallback((open: boolean) => {
-        if (!open) {
+        if (!open && isMounted) {
             if (isUpdating) {
                 toast.info('Upload cancelled');
             }
             forceClose();
         }
-    }, [isUpdating, forceClose]);
+    }, [isUpdating, forceClose, isMounted]);
 
-    // Button click - directly open upload dialog
+    // Button click - ensure clean state before opening
     const handleButtonClick = useCallback(() => {
-        setUploaderKey(prev => prev + 1);
-        setIsDialogOpen(true);
-    }, []);
+        if (!isMounted) return;
 
-    // Upload handlers
+        // Reset everything before opening
+        setIsUpdating(false);
+        setUploaderKey(prev => prev + 1);
+
+        // Use setTimeout to ensure state is clean
+        setTimeout(() => {
+            setIsDialogOpen(true);
+        }, 50);
+    }, [isMounted]);
+
+    // Upload handlers with better error handling
     const handleUploadCancel = useCallback(() => {
         if (isUpdating) {
             toast.info('Upload cancelled');
@@ -125,6 +145,21 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
         }
     }, [voiceId, onVoiceUpdated, router, forceClose]);
 
+    // Don't render until mounted to prevent hydration issues
+    if (!isMounted) {
+        return (
+            <Button
+                variant="outline"
+                disabled
+                className="flex items-center gap-2"
+                type="button"
+            >
+                <Upload className="h-4 w-4" />
+                Change Voice Sample
+            </Button>
+        );
+    }
+
     return (
         <>
             <Button
@@ -137,11 +172,21 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
                 Change Voice Sample
             </Button>
 
-            <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+            <Dialog
+                open={isDialogOpen}
+                onOpenChange={handleDialogClose}
+                modal={true}
+            >
                 <DialogContent
                     className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-lg max-w-2xl"
-                    onInteractOutside={() => handleDialogClose(false)}
-                    onEscapeKeyDown={() => handleDialogClose(false)}
+                    onInteractOutside={(e) => {
+                        e.preventDefault();
+                        handleDialogClose(false);
+                    }}
+                    onEscapeKeyDown={(e) => {
+                        e.preventDefault();
+                        handleDialogClose(false);
+                    }}
                 >
                     <DialogHeader>
                         <DialogTitle>Upload New Voice Sample</DialogTitle>
@@ -165,7 +210,11 @@ export default function ChangeVoiceButton({ voiceId, onVoiceUpdated }: ChangeVoi
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={forceClose}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        forceClose();
+                                    }}
                                     className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
                                 >
                                     Force Close
