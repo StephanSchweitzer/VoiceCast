@@ -20,6 +20,7 @@ model User {
   voices          Voice[]
   savedVoices     SavedVoice[]
   generatedAudios GeneratedAudio[]
+  speakSessions   SpeakSession[]
   preferences     UserPreferences?
 }
 
@@ -60,10 +61,24 @@ model SavedVoice {
   @@unique([userId, voiceId])
 }
 
+model SpeakSession {
+  id              String           @id @default(cuid())
+  name            String
+  userId          String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  generatedAudios GeneratedAudio[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, updatedAt])
+}
+
 model GeneratedAudio {
   id        String   @id @default(cuid())
   userId    String
   voiceId   String
+  sessionId String
   text      String
   emotion   String
   arousal   Float
@@ -72,10 +87,12 @@ model GeneratedAudio {
   isLiked   Boolean?
   createdAt DateTime @default(now())
 
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  voice Voice @relation(fields: [voiceId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voice   Voice        @relation(fields: [voiceId], references: [id], onDelete: Cascade)
+  session SpeakSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+  @@index([sessionId, createdAt])
 }
 
 model UserPreferences {

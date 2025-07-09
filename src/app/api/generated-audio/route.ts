@@ -24,17 +24,31 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '15');
-    const cursor = searchParams.get('cursor'); // For pagination
+    const cursor = searchParams.get('cursor');
+    const sessionId = searchParams.get('sessionId'); // Optional filter by session
 
     try {
+        const whereClause: { userId: string; sessionId?: string } = {
+            userId: session.user.id
+        };
+        if (sessionId) {
+            whereClause.sessionId = sessionId;
+        }
+
         const generatedAudios = await prisma.generatedAudio.findMany({
-            where: { userId: session.user.id },
+            where: whereClause,
             include: {
                 voice: {
                     select: {
                         id: true,
                         name: true,
                         audioSample: true
+                    }
+                },
+                session: {
+                    select: {
+                        id: true,
+                        name: true
                     }
                 }
             },
@@ -76,11 +90,11 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const { text, voiceId, emotion } = await request.json();
+        const { text, voiceId, emotion, sessionId } = await request.json();
 
-        if (!text || !voiceId || !emotion) {
+        if (!text || !voiceId || !emotion || !sessionId) {
             return NextResponse.json(
-                { message: 'Text, voice ID, and emotion are required' },
+                { message: 'Text, voice ID, emotion, and session ID are required' },
                 { status: 400 }
             );
         }
@@ -89,6 +103,18 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(
                 { message: 'Invalid emotion' },
                 { status: 400 }
+            );
+        }
+
+        // Verify session belongs to user
+        const speakSession = await prisma.speakSession.findUnique({
+            where: { id: sessionId }
+        });
+
+        if (!speakSession || speakSession.userId !== session.user.id) {
+            return NextResponse.json(
+                { message: 'Session not found or access denied' },
+                { status: 404 }
             );
         }
 
@@ -124,7 +150,6 @@ export async function POST(request: NextRequest) {
         const { arousal, valence } = EMOTION_MAPPINGS[emotion as keyof typeof EMOTION_MAPPINGS];
 
         // Get the voice sample audio for voice cloning
-        // voice.audioSample contains path like "/uploads/filename.wav"
         const audioPath = join(process.cwd(), 'public', voice.audioSample);
         const audioBuffer = await readFile(audioPath);
         const audioSampleData = audioBuffer.toString('base64');
@@ -137,7 +162,7 @@ export async function POST(request: NextRequest) {
             },
             body: JSON.stringify({
                 text,
-                audioReference: audioSampleData, // Pass the actual audio data
+                audioReference: audioSampleData,
                 arousal,
                 valence
             }),
@@ -167,26 +192,44 @@ export async function POST(request: NextRequest) {
         await writeFile(fullLocalPath, buffer);
         const localFilePath = `/generated-audios/${filename}`;
 
-        // Save to database with local file path
-        const generatedAudio = await prisma.generatedAudio.create({
-            data: {
-                userId: session.user.id,
-                voiceId,
-                text,
-                emotion,
-                arousal,
-                valence,
-                filePath: localFilePath
-            },
-            include: {
-                voice: {
-                    select: {
-                        id: true,
-                        name: true,
-                        audioSample: true
+        // Save to database with session ID and update session updatedAt
+        const generatedAudio = await prisma.$transaction(async (tx) => {
+            // Create the generated audio
+            const audio = await tx.generatedAudio.create({
+                data: {
+                    userId: session.user.id,
+                    voiceId,
+                    sessionId,
+                    text,
+                    emotion,
+                    arousal,
+                    valence,
+                    filePath: localFilePath
+                },
+                include: {
+                    voice: {
+                        select: {
+                            id: true,
+                            name: true,
+                            audioSample: true
+                        }
+                    },
+                    session: {
+                        select: {
+                            id: true,
+                            name: true
+                        }
                     }
                 }
-            }
+            });
+
+            // Update session's updatedAt timestamp
+            await tx.speakSession.update({
+                where: { id: sessionId },
+                data: { updatedAt: new Date() }
+            });
+
+            return audio;
         });
 
         return NextResponse.json(generatedAudio, { status: 201 });
@@ -195,125 +238,6 @@ export async function POST(request: NextRequest) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to generate audio';
         return NextResponse.json(
             { message: errorMessage },
-            { status: 500 }
-        );
-    }
-}
-
-export async function PATCH(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
-    const id = (await params).id;
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-        return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
-
-    try {
-        const { isLiked } = await request.json();
-
-        if (isLiked !== null && typeof isLiked !== 'boolean') {
-            return NextResponse.json(
-                { message: 'isLiked must be a boolean or null' },
-                { status: 400 }
-            );
-        }
-
-        const generatedAudio = await prisma.generatedAudio.findUnique({
-            where: { id }
-        });
-
-        if (!generatedAudio) {
-            return NextResponse.json(
-                { message: 'Generated audio not found' },
-                { status: 404 }
-            );
-        }
-
-        if (generatedAudio.userId !== session.user.id) {
-            return NextResponse.json(
-                { message: 'Unauthorized' },
-                { status: 403 }
-            );
-        }
-
-        const updatedAudio = await prisma.generatedAudio.update({
-            where: { id },
-            data: { isLiked },
-            include: {
-                voice: {
-                    select: {
-                        id: true,
-                        name: true,
-                        audioSample: true
-                    }
-                }
-            }
-        });
-
-        return NextResponse.json(updatedAudio);
-    } catch (error) {
-        console.error('Error updating like status:', error);
-        return NextResponse.json(
-            { message: 'Failed to update like status' },
-            { status: 500 }
-        );
-    }
-}
-
-export async function DELETE(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
-    const id = (await params).id;
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-        return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
-
-    try {
-        const generatedAudio = await prisma.generatedAudio.findUnique({
-            where: { id }
-        });
-
-        if (!generatedAudio) {
-            return NextResponse.json(
-                { message: 'Generated audio not found' },
-                { status: 404 }
-            );
-        }
-
-        if (generatedAudio.userId !== session.user.id) {
-            return NextResponse.json(
-                { message: 'Unauthorized' },
-                { status: 403 }
-            );
-        }
-
-        // Delete from database first
-        await prisma.generatedAudio.delete({
-            where: { id }
-        });
-
-        // Delete the generated audio file from public/generated-audios/
-        if (generatedAudio.filePath && !generatedAudio.filePath.startsWith('http')) {
-            try {
-                const fullPath = join(process.cwd(), 'public', generatedAudio.filePath);
-                await unlink(fullPath);
-            } catch (fileError) {
-                console.warn('Could not delete generated audio file:', fileError);
-                // Don't fail the request if file deletion fails
-            }
-        }
-
-        return NextResponse.json({ message: 'Generated audio deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting generated audio:', error);
-        return NextResponse.json(
-            { message: 'Failed to delete generated audio' },
             { status: 500 }
         );
     }

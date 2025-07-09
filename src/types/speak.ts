@@ -4,6 +4,17 @@ export type SpeakVoice = VoiceWithOptionalUser & {
     savedAt?: string;
 };
 
+export interface SpeakSession {
+    id: string;
+    name: string;
+    userId: string;
+    createdAt: string;
+    updatedAt: string;
+    _count?: {
+        generatedAudios: number;
+    };
+}
+
 export interface GeneratedAudio {
     id: string;
     text: string;
@@ -15,6 +26,11 @@ export interface GeneratedAudio {
         id: string;
         name: string;
         audioSample: string;
+    };
+    sessionId?: string;
+    session?: {
+        id: string;
+        name: string;
     };
 }
 

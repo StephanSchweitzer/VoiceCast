@@ -7,17 +7,19 @@ import TextInput from './components/TextInput';
 import GeneratedAudioList from './components/GeneratedAudioList';
 import ErrorState from './components/ErrorState';
 import SpeakSkeleton from './components/SpeakSkeleton';
-import { SpeakVoice, GeneratedAudio, Emotion } from '@/types/speak';
+import { SpeakVoice, GeneratedAudio, SpeakSession } from '@/types/speak';
 
 interface SpeakClientProps {
     userId: string;
+    sessionId?: string; // Optional - if not provided, creates new session
 }
 
-export default function SpeakClient({ userId }: SpeakClientProps) {
+export default function SpeakClient({ userId, sessionId }: SpeakClientProps) {
     const [userVoices, setUserVoices] = useState<SpeakVoice[]>([]);
     const [savedVoices, setSavedVoices] = useState<SpeakVoice[]>([]);
     const [selectedVoiceId, setSelectedVoiceId] = useState<string>('');
     const [generatedAudios, setGeneratedAudios] = useState<GeneratedAudio[]>([]);
+    const [currentSession, setCurrentSession] = useState<SpeakSession | null>(null);
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -26,37 +28,85 @@ export default function SpeakClient({ userId }: SpeakClientProps) {
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
+    const createNewSession = async () => {
+        const response = await fetch('/api/speak-sessions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}) // Will auto-generate name
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to create session');
+        }
+
+        return await response.json();
+    };
+
+    const loadSession = async (sessionId: string) => {
+        const response = await fetch(`/api/speak-sessions/${sessionId}?limit=15`);
+
+        if (!response.ok) {
+            throw new Error('Failed to load session');
+        }
+
+        return await response.json();
+    };
+
+    const loadVoices = async () => {
+        const [userVoicesRes, savedVoicesRes] = await Promise.all([
+            fetch('/api/voices?type=user'),
+            fetch('/api/saved-voices')
+        ]);
+
+        if (!userVoicesRes.ok || !savedVoicesRes.ok) {
+            throw new Error('Failed to load voices');
+        }
+
+        const [userVoicesData, savedVoicesData] = await Promise.all([
+            userVoicesRes.json(),
+            savedVoicesRes.json()
+        ]);
+
+        setUserVoices(userVoicesData);
+        setSavedVoices(savedVoicesData);
+
+        // Set default voice selection
+        if (userVoicesData.length > 0) {
+            setSelectedVoiceId(userVoicesData[0].id);
+        } else if (savedVoicesData.length > 0) {
+            setSelectedVoiceId(savedVoicesData[0].id);
+        }
+    };
+
     const loadInitialData = async () => {
         try {
             setLoading(true);
             setError(null);
 
-            const [userVoicesRes, savedVoicesRes, generatedAudioRes] = await Promise.all([
-                fetch('/api/voices?type=user'),
-                fetch('/api/saved-voices'),
-                fetch('/api/generated-audio?limit=15')
-            ]);
+            // Load voices first
+            await loadVoices();
 
-            if (!userVoicesRes.ok || !savedVoicesRes.ok || !generatedAudioRes.ok) {
-                throw new Error('Failed to load data');
+            let session;
+            if (sessionId) {
+                // Load existing session
+                const sessionData = await loadSession(sessionId);
+                session = sessionData.session;
+                setGeneratedAudios(sessionData.audios || []);
+                setHasMore(sessionData.hasMore || false);
+                setNextCursor(sessionData.nextCursor);
+            } else {
+                // Create new session
+                session = await createNewSession();
+                setGeneratedAudios([]);
+                setHasMore(false);
+                setNextCursor(null);
             }
 
-            const [userVoicesData, savedVoicesData, generatedAudioData] = await Promise.all([
-                userVoicesRes.json(),
-                savedVoicesRes.json(),
-                generatedAudioRes.json()
-            ]);
+            setCurrentSession(session);
 
-            setUserVoices(userVoicesData);
-            setSavedVoices(savedVoicesData);
-            setGeneratedAudios(generatedAudioData.audios || []);
-            setHasMore(generatedAudioData.hasMore || false);
-            setNextCursor(generatedAudioData.nextCursor);
-
-            if (userVoicesData.length > 0) {
-                setSelectedVoiceId(userVoicesData[0].id);
-            } else if (savedVoicesData.length > 0) {
-                setSelectedVoiceId(savedVoicesData[0].id);
+            // Update URL without reload if we created a new session
+            if (!sessionId && session.id) {
+                window.history.replaceState(null, '', `/speak?session=${session.id}`);
             }
 
         } catch (err) {
@@ -68,7 +118,7 @@ export default function SpeakClient({ userId }: SpeakClientProps) {
     };
 
     const handleGenerate = async (text: string, emotion: string) => {
-        if (!selectedVoiceId) return null;
+        if (!selectedVoiceId || !currentSession) return null;
 
         const response = await fetch('/api/generated-audio', {
             method: 'POST',
@@ -76,7 +126,8 @@ export default function SpeakClient({ userId }: SpeakClientProps) {
             body: JSON.stringify({
                 text: text.trim(),
                 voiceId: selectedVoiceId,
-                emotion
+                emotion,
+                sessionId: currentSession.id
             }),
         });
 
@@ -85,6 +136,7 @@ export default function SpeakClient({ userId }: SpeakClientProps) {
 
         setGeneratedAudios(prev => [result, ...prev]);
 
+        // Auto-play the generated audio
         if (audioRef.current) {
             audioRef.current.src = result.filePath;
             audioRef.current.play().catch(console.error);
@@ -94,9 +146,9 @@ export default function SpeakClient({ userId }: SpeakClientProps) {
     };
 
     const handleLoadMore = async () => {
-        if (!hasMore || !nextCursor) return;
+        if (!hasMore || !nextCursor || !currentSession) return;
 
-        const response = await fetch(`/api/generated-audio?limit=15&cursor=${nextCursor}`);
+        const response = await fetch(`/api/speak-sessions/${currentSession.id}?limit=15&cursor=${nextCursor}`);
         const data = await response.json();
 
         setGeneratedAudios(prev => [...prev, ...data.audios]);
@@ -116,14 +168,16 @@ export default function SpeakClient({ userId }: SpeakClientProps) {
 
     useEffect(() => {
         loadInitialData();
-    }, []);
+    }, [sessionId]);
 
     if (loading) {
         return (
             <div>
                 <div className="flex items-center justify-center mb-6">
                     <Loader2 className="h-5 w-5 animate-spin text-primary mr-2" />
-                    <span className="text-sm text-muted-foreground">Loading voices...</span>
+                    <span className="text-sm text-muted-foreground">
+                        {sessionId ? 'Loading session...' : 'Creating new session...'}
+                    </span>
                 </div>
                 <SpeakSkeleton />
             </div>
@@ -135,30 +189,48 @@ export default function SpeakClient({ userId }: SpeakClientProps) {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="h-[calc(100vh-120px)] flex flex-col space-y-2">
             {/* Hidden audio element for auto-play */}
             <audio ref={audioRef} preload="none" />
 
-            <VoiceSelection
-                userVoices={userVoices}
-                savedVoices={savedVoices}
-                selectedVoiceId={selectedVoiceId}
-                onVoiceSelect={setSelectedVoiceId}
-            />
+            {/* Session Header - Minimal */}
+            {currentSession && (
+                <div className="px-3 py-1 bg-gray-50 dark:bg-gray-900 rounded text-center">
+                    <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                        {currentSession.name}
+                    </h2>
+                </div>
+            )}
 
-            <TextInput
-                selectedVoiceId={selectedVoiceId}
-                onGenerate={handleGenerate}
-                disabled={userVoices.length === 0 && savedVoices.length === 0}
-            />
+            {/* Voice Selection - Compact */}
+            <div className="flex-shrink-0">
+                <VoiceSelection
+                    userVoices={userVoices}
+                    savedVoices={savedVoices}
+                    selectedVoiceId={selectedVoiceId}
+                    onVoiceSelect={setSelectedVoiceId}
+                />
+            </div>
 
-            <GeneratedAudioList
-                audios={generatedAudios}
-                hasMore={hasMore}
-                onLoadMore={handleLoadMore}
-                onUpdateAudio={handleUpdateAudio}
-                onDeleteAudio={handleDeleteAudio}
-            />
+            {/* Generated Audio List - MAXIMIZED main section */}
+            <div className="flex-1 min-h-0 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <GeneratedAudioList
+                    audios={generatedAudios}
+                    hasMore={hasMore}
+                    onLoadMore={handleLoadMore}
+                    onUpdateAudio={handleUpdateAudio}
+                    onDeleteAudio={handleDeleteAudio}
+                />
+            </div>
+
+            {/* Text Input - Compact at bottom */}
+            <div className="flex-shrink-0">
+                <TextInput
+                    selectedVoiceId={selectedVoiceId}
+                    onGenerate={handleGenerate}
+                    disabled={userVoices.length === 0 && savedVoices.length === 0}
+                />
+            </div>
         </div>
     );
 }
