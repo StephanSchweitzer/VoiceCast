@@ -9,15 +9,18 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String?
-  email     String   @unique
-  password  String
-  image     String?
-  role      String   @default("user") // Add this line
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  voices    Voice[]
+  id              String           @id @default(cuid())
+  name            String?
+  email           String           @unique
+  password        String
+  image           String?
+  role            String           @default("user")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  voices          Voice[]
+  savedVoices     SavedVoice[]
+  generatedAudios GeneratedAudio[]
+  preferences     UserPreferences?
 }
 
 model Genre {
@@ -28,17 +31,57 @@ model Genre {
 }
 
 model Voice {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  audioSample String // URL to the audio sample
-  duration    Float? // Duration in seconds - ADD THIS LINE
-  isPublic    Boolean  @default(false)
-  gender      String? // e.g., "Male", "Female", "Non-binary", "Neutral"
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  genreId     String?
-  genre       Genre?   @relation(fields: [genreId], references: [id])
+  id              String           @id @default(cuid())
+  name            String
+  description     String?
+  audioSample     String
+  duration        Float?
+  isPublic        Boolean          @default(false)
+  gender          String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  genreId         String?
+  genre           Genre?           @relation(fields: [genreId], references: [id])
+  savedBy         SavedVoice[]
+  generatedAudios GeneratedAudio[]
+}
+
+model SavedVoice {
+  id        String   @id @default(cuid())
+  userId    String
+  voiceId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voice Voice @relation(fields: [voiceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, voiceId])
+}
+
+model GeneratedAudio {
+  id        String   @id @default(cuid())
+  userId    String
+  voiceId   String
+  text      String
+  emotion   String
+  arousal   Float
+  valence   Float
+  filePath  String
+  isLiked   Boolean?
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voice Voice @relation(fields: [voiceId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model UserPreferences {
+  id       String  @id @default(cuid())
+  userId   String  @unique
+  autoPlay Boolean @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

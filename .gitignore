@@ -7,3 +7,5 @@ VoiceCast.iml
 next-env.d.ts
 public/uploads
 git-filter-repo
+public/test-audio
+public/generated-audios/
