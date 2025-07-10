@@ -78,14 +78,14 @@ export default function Sidebar() {
     return (
         <>
             {/* Overlay/backdrop that appears when sidebar is open on mobile */}
-        {isOpen && (
-            <div
-                className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-20"
-                onClick={closeSidebar}
-            />
-        )}
+            {isOpen && (
+                <div
+                    className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-20"
+                    onClick={closeSidebar}
+                />
+            )}
 
-        {/* Sidebar - with smooth transition for sliding */}
+            {/* Sidebar - with smooth transition for sliding */}
             <aside
                 className={`fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-30 ${topPadding} overflow-y-auto overscroll-contain transform transition-transform duration-300 ease-in-out ${
                     isOpen ? 'translate-x-0' : '-translate-x-full'
@@ -143,20 +143,20 @@ export default function Sidebar() {
                 {/* Speak Sessions Section */}
                 {session && (
                     <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-                        <div className="flex items-center justify-between mb-3">
+                        <div
+                            className="flex items-center justify-between mb-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded px-2 py-1 -mx-2 transition-colors"
+                            onClick={toggleSpeakSessionsCollapsed}
+                        >
                             <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                 Speak Sessions
                             </h3>
-                            <button
-                                onClick={toggleSpeakSessionsCollapsed}
-                                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
-                            >
+                            <div className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors">
                                 <ChevronDown
                                     className={`w-3 h-3 text-gray-400 transition-transform duration-200 ease-in-out ${
                                         speakSessionsCollapsed ? 'rotate-180' : 'rotate-0'
                                     }`}
                                 />
-                            </button>
+                            </div>
                         </div>
 
                         {/* Collapsible content with smooth transition */}
@@ -214,20 +214,20 @@ export default function Sidebar() {
 
                 {/* Voice Studio Section */}
                 <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-                    <div className="flex items-center justify-between mb-3">
+                    <div
+                        className="flex items-center justify-between mb-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded px-2 py-1 -mx-2 transition-colors"
+                        onClick={toggleVoicesCollapsed}
+                    >
                         <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                             Your Voice Library
                         </h3>
-                        <button
-                            onClick={toggleVoicesCollapsed}
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
-                        >
+                        <div className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors">
                             <ChevronDown
                                 className={`w-3 h-3 text-gray-400 transition-transform duration-200 ease-in-out ${
                                     voicesCollapsed ? 'rotate-180' : 'rotate-0'
                                 }`}
                             />
-                        </button>
+                        </div>
                     </div>
 
                     {/* Collapsible content with smooth transition */}
