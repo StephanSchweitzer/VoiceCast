@@ -86,7 +86,7 @@ export default async function Dashboard() {
                             {speakSessions.map((speakSession) => (
                                 <Link
                                     key={speakSession.id}
-                                    href={`/speak?session=${speakSession.id}`}
+                                    href={`/speak/session/${speakSession.id}`}
                                     className="group block rounded-xl bg-gray-100 dark:bg-gray-700 p-6 text-center transition-all duration-200 hover:bg-gray-200 dark:hover:bg-gray-600 hover:scale-105 hover:shadow-lg"
                                 >
                                     <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-600 mx-auto group-hover:bg-gray-400 dark:group-hover:bg-gray-500 transition-colors">

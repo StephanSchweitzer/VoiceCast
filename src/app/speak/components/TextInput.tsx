@@ -38,10 +38,11 @@ const SELECTED_COLORS = {
 interface TextInputProps {
     selectedVoiceId: string;
     onGenerate: (text: string, emotion: string) => Promise<any>;
-    disabled: boolean;
+    disabled?: boolean;
+    placeholder?: string;
 }
 
-export default function TextInput({ selectedVoiceId, onGenerate, disabled }: TextInputProps) {
+export default function TextInput({ selectedVoiceId, onGenerate, disabled, placeholder }: TextInputProps) {
     const [text, setText] = useState('');
     const [selectedEmotion, setSelectedEmotion] = useState<string>('neutral');
     const [isGenerating, setIsGenerating] = useState(false);
@@ -102,7 +103,7 @@ export default function TextInput({ selectedVoiceId, onGenerate, disabled }: Tex
                 <div className="space-y-2">
                     <Textarea
                         rows={4}
-                        placeholder="Type what you want to say..."
+                        placeholder={placeholder || "Enter text to generate speech..."}
                         className="resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                         value={text}
                         onChange={(e) => setText(e.target.value.slice(0, 300))}

@@ -23,7 +23,7 @@ export async function GET(
         // First verify session belongs to user
         const speakSession = await prisma.speakSession.findUnique({
             where: { id },
-            select: { userId: true, name: true, createdAt: true, updatedAt: true }
+            select: { userId: true, name: true, createdAt: true, updatedAt: true, id: true }
         });
 
         if (!speakSession) {

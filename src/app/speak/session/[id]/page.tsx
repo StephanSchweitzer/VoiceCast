@@ -1,9 +1,13 @@
 import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth';
-import SpeakClient from './SpeakClient';
+import SpeakClient from '../../SpeakClient';
 
-export default async function SpeakNewPage() {
+interface SpeakSessionPageProps {
+    params: Promise<{ id: string }>
+}
+
+export default async function SpeakSessionPage({ params }: SpeakSessionPageProps) {
     const session = await getServerSession(authOptions);
 
     if (!session) {
@@ -15,7 +19,8 @@ export default async function SpeakNewPage() {
             <div className="w-full max-w-4xl mx-auto">
                 <SpeakClient
                     userId={session.user.id}
-                    mode="new"
+                    mode="session"
+                    sessionId={(await params).id}
                 />
             </div>
         </div>

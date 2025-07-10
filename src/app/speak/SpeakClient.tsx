@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Loader2, MessageSquarePlus } from 'lucide-react';
 import VoiceSelection from './components/VoiceSelection';
 import TextInput from './components/TextInput';
 import GeneratedAudioList from './components/GeneratedAudioList';
@@ -11,28 +12,107 @@ import { SpeakVoice, GeneratedAudio, SpeakSession } from '@/types/speak';
 
 interface SpeakClientProps {
     userId: string;
-    sessionId?: string; // Optional - if not provided, creates new session
+    mode: 'new' | 'session';
+    sessionId?: string; // Required when mode is 'session'
 }
 
-export default function SpeakClient({ userId, sessionId }: SpeakClientProps) {
+export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProps) {
+    const router = useRouter();
+
+    // Voice state
     const [userVoices, setUserVoices] = useState<SpeakVoice[]>([]);
     const [savedVoices, setSavedVoices] = useState<SpeakVoice[]>([]);
     const [selectedVoiceId, setSelectedVoiceId] = useState<string>('');
-    const [generatedAudios, setGeneratedAudios] = useState<GeneratedAudio[]>([]);
-    const [currentSession, setCurrentSession] = useState<SpeakSession | null>(null);
 
-    const [loading, setLoading] = useState(true);
+    // Session state
+    const [currentSession, setCurrentSession] = useState<SpeakSession | null>(null);
+    const [generatedAudios, setGeneratedAudios] = useState<GeneratedAudio[]>([]);
+
+    // Loading state
+    const [loadingVoices, setLoadingVoices] = useState(true);
+    const [loadingSession, setLoadingSession] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Pagination state
     const [hasMore, setHasMore] = useState(false);
     const [nextCursor, setNextCursor] = useState<string | null>(null);
 
+    // Refs
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
-    const createNewSession = async () => {
+    // Load voices on mount (always needed)
+    const loadVoices = async (signal?: AbortSignal) => {
+        try {
+            const [userVoicesRes, savedVoicesRes] = await Promise.all([
+                fetch('/api/voices?type=user', { signal }),
+                fetch('/api/saved-voices', { signal })
+            ]);
+
+            if (!userVoicesRes.ok || !savedVoicesRes.ok) {
+                throw new Error('Failed to load voices');
+            }
+
+            const [userVoicesData, savedVoicesData] = await Promise.all([
+                userVoicesRes.json(),
+                savedVoicesRes.json()
+            ]);
+
+            setUserVoices(userVoicesData);
+            setSavedVoices(savedVoicesData);
+
+            // Set default voice selection
+            if (userVoicesData.length > 0) {
+                setSelectedVoiceId(userVoicesData[0].id);
+            } else if (savedVoicesData.length > 0) {
+                setSelectedVoiceId(savedVoicesData[0].id);
+            }
+        } catch (err) {
+            if (err instanceof Error && err.name === 'AbortError') {
+                return;
+            }
+            throw err;
+        }
+    };
+
+    // Load existing session (only in session mode)
+    const loadSession = async (sessionId: string, signal?: AbortSignal) => {
+        try {
+            setLoadingSession(true);
+
+            const response = await fetch(`/api/speak-sessions/${sessionId}?limit=15`, {
+                signal
+            });
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Session not found');
+                }
+                throw new Error('Failed to load session');
+            }
+
+            const data = await response.json();
+
+            setCurrentSession(data.session);
+            setGeneratedAudios(data.audios || []);
+            setHasMore(data.hasMore || false);
+            setNextCursor(data.nextCursor);
+        } catch (err) {
+            if (err instanceof Error && err.name === 'AbortError') {
+                return;
+            }
+            throw err;
+        } finally {
+            setLoadingSession(false);
+        }
+    };
+
+    // Create new session (only when user generates first audio)
+    const createNewSession = async (name?: string) => {
         const response = await fetch('/api/speak-sessions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({}) // Will auto-generate name
+            body: JSON.stringify({ name }), // Will auto-generate name if not provided
         });
 
         if (!response.ok) {
@@ -42,109 +122,132 @@ export default function SpeakClient({ userId, sessionId }: SpeakClientProps) {
         return await response.json();
     };
 
-    const loadSession = async (sessionId: string) => {
-        const response = await fetch(`/api/speak-sessions/${sessionId}?limit=15`);
-
-        if (!response.ok) {
-            throw new Error('Failed to load session');
+    // Initialize voices on mount
+    useEffect(() => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
         }
 
-        return await response.json();
-    };
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
 
-    const loadVoices = async () => {
-        const [userVoicesRes, savedVoicesRes] = await Promise.all([
-            fetch('/api/voices?type=user'),
-            fetch('/api/saved-voices')
-        ]);
-
-        if (!userVoicesRes.ok || !savedVoicesRes.ok) {
-            throw new Error('Failed to load voices');
-        }
-
-        const [userVoicesData, savedVoicesData] = await Promise.all([
-            userVoicesRes.json(),
-            savedVoicesRes.json()
-        ]);
-
-        setUserVoices(userVoicesData);
-        setSavedVoices(savedVoicesData);
-
-        // Set default voice selection
-        if (userVoicesData.length > 0) {
-            setSelectedVoiceId(userVoicesData[0].id);
-        } else if (savedVoicesData.length > 0) {
-            setSelectedVoiceId(savedVoicesData[0].id);
-        }
-    };
-
-    const loadInitialData = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            // Load voices first
-            await loadVoices();
-
-            let session;
-            if (sessionId) {
-                // Load existing session
-                const sessionData = await loadSession(sessionId);
-                session = sessionData.session;
-                setGeneratedAudios(sessionData.audios || []);
-                setHasMore(sessionData.hasMore || false);
-                setNextCursor(sessionData.nextCursor);
-            } else {
-                // Create new session
-                session = await createNewSession();
-                setGeneratedAudios([]);
-                setHasMore(false);
-                setNextCursor(null);
+        const init = async () => {
+            try {
+                setLoadingVoices(true);
+                setError(null);
+                await loadVoices(abortController.signal);
+            } catch (err) {
+                console.error('Error loading voices:', err);
+                setError('Failed to load voices. Please try again.');
+            } finally {
+                setLoadingVoices(false);
             }
+        };
 
-            setCurrentSession(session);
+        init();
 
-            // Update URL without reload if we created a new session
-            if (!sessionId && session.id) {
-                window.history.replaceState(null, '', `/speak?session=${session.id}`);
-            }
+        return () => {
+            abortController.abort();
+        };
+    }, []);
 
-        } catch (err) {
-            console.error('Error loading initial data:', err);
-            setError('Failed to load data. Please try again.');
-        } finally {
-            setLoading(false);
+    // Load session if in session mode
+    useEffect(() => {
+        if (mode === 'session' && sessionId && !loadingVoices) {
+            const abortController = new AbortController();
+
+            const load = async () => {
+                try {
+                    setError(null);
+                    await loadSession(sessionId, abortController.signal);
+                } catch (err) {
+                    console.error('Error loading session:', err);
+                    if (err instanceof Error && err.message === 'Session not found') {
+                        setError('Session not found. Redirecting to new conversation...');
+                        setTimeout(() => router.push('/speak'), 2000);
+                    } else {
+                        setError('Failed to load session. Please try again.');
+                    }
+                }
+            };
+
+            load();
+
+            return () => {
+                abortController.abort();
+            };
         }
-    };
+    }, [mode, sessionId, loadingVoices, router]);
 
+    // Handle audio generation
     const handleGenerate = async (text: string, emotion: string) => {
-        if (!selectedVoiceId || !currentSession) return null;
+        if (!selectedVoiceId) return null;
 
-        const response = await fetch('/api/generated-audio', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                text: text.trim(),
-                voiceId: selectedVoiceId,
-                emotion,
-                sessionId: currentSession.id
-            }),
-        });
+        try {
+            // If in new mode, create session first
+            if (mode === 'new' && !currentSession) {
+                const session = await createNewSession();
+                setCurrentSession(session);
 
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.message || 'Failed to generate speech');
+                // Generate the audio with the new session
+                const response = await fetch('/api/generated-audio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text.trim(),
+                        voiceId: selectedVoiceId,
+                        emotion,
+                        sessionId: session.id
+                    }),
+                });
 
-        setGeneratedAudios(prev => [result, ...prev]);
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || 'Failed to generate speech');
 
-        // Auto-play the generated audio
-        if (audioRef.current) {
-            audioRef.current.src = result.filePath;
-            audioRef.current.play().catch(console.error);
+                setGeneratedAudios([result]);
+
+                // Auto-play the generated audio
+                if (audioRef.current) {
+                    audioRef.current.src = result.filePath;
+                    audioRef.current.play().catch(console.error);
+                }
+
+                // Navigate to the session URL
+                router.push(`/speak/session/${session.id}`);
+
+                return result;
+            } else if (currentSession) {
+                const response = await fetch('/api/generated-audio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text.trim(),
+                        voiceId: selectedVoiceId,
+                        emotion,
+                        sessionId: currentSession?.id || "you don't have it"
+                    }),
+                });
+
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || 'Failed to generate speech');
+
+                setGeneratedAudios(prev => [result, ...prev]);
+
+                // Auto-play the generated audio
+                if (audioRef.current) {
+                    audioRef.current.src = result.filePath;
+                    audioRef.current.play().catch(console.error);
+                }
+
+                return result;
+            }
+        } catch (err) {
+            console.error('Error generating audio:', err);
+            throw err;
         }
-
-        return result;
     };
 
+    // Handle pagination
     const handleLoadMore = async () => {
         if (!hasMore || !nextCursor || !currentSession) return;
 
@@ -156,6 +259,7 @@ export default function SpeakClient({ userId, sessionId }: SpeakClientProps) {
         setNextCursor(data.nextCursor);
     };
 
+    // Handle audio updates
     const handleUpdateAudio = (audioId: string, updates: Partial<GeneratedAudio>) => {
         setGeneratedAudios(prev =>
             prev.map(audio => audio.id === audioId ? { ...audio, ...updates } : audio)
@@ -166,17 +270,14 @@ export default function SpeakClient({ userId, sessionId }: SpeakClientProps) {
         setGeneratedAudios(prev => prev.filter(audio => audio.id !== audioId));
     };
 
-    useEffect(() => {
-        loadInitialData();
-    }, [sessionId]);
-
-    if (loading) {
+    // Loading state
+    if (loadingVoices || (mode === 'session' && loadingSession)) {
         return (
             <div>
                 <div className="flex items-center justify-center mb-6">
                     <Loader2 className="h-5 w-5 animate-spin text-primary mr-2" />
                     <span className="text-sm text-muted-foreground">
-                        {sessionId ? 'Loading session...' : 'Creating new session...'}
+                        {loadingVoices ? 'Loading voices...' : 'Loading session...'}
                     </span>
                 </div>
                 <SpeakSkeleton />
@@ -184,25 +285,46 @@ export default function SpeakClient({ userId, sessionId }: SpeakClientProps) {
         );
     }
 
+    // Error state
     if (error) {
-        return <ErrorState message={error} onRetry={loadInitialData} />;
+        return (
+            <ErrorState
+                message={error}
+                onRetry={() => {
+                    setError(null);
+                    if (mode === 'session' && sessionId) {
+                        loadSession(sessionId);
+                    } else {
+                        loadVoices();
+                    }
+                }}
+            />
+        );
     }
+
+    // No voices available
+    const hasVoices = userVoices.length > 0 || savedVoices.length > 0;
 
     return (
         <div className="-mt-4 h-[calc(100vh-120px)] flex flex-col space-y-2">
             {/* Hidden audio element for auto-play */}
             <audio ref={audioRef} preload="none" />
 
-            {/* Session Header - Minimal */}
-            {currentSession && (
-                <div className="px-3 py-1 bg-gray-50 dark:bg-gray-900 rounded text-center">
-                    <h2 className="text-sm font-medium text-gray-900 dark:text-white">
-                        {currentSession.name}
-                    </h2>
-                </div>
-            )}
+            {/* Session Header */}
+            <div className="px-3 py-1 bg-gray-50 dark:bg-gray-900 rounded text-center">
+                <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                    {mode === 'new' ? (
+                        <span className="flex items-center justify-center gap-2">
+                            <MessageSquarePlus className="h-4 w-4" />
+                            New Conversation
+                        </span>
+                    ) : (
+                        currentSession?.name || 'Loading...'
+                    )}
+                </h2>
+            </div>
 
-            {/* Voice Selection - Compact */}
+            {/* Voice Selection */}
             <div className="flex-shrink-0">
                 <VoiceSelection
                     userVoices={userVoices}
@@ -212,23 +334,43 @@ export default function SpeakClient({ userId, sessionId }: SpeakClientProps) {
                 />
             </div>
 
-            {/* Generated Audio List - MAXIMIZED main section */}
+            {/* Generated Audio List */}
             <div className="flex-1 min-h-0 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                <GeneratedAudioList
-                    audios={generatedAudios}
-                    hasMore={hasMore}
-                    onLoadMore={handleLoadMore}
-                    onUpdateAudio={handleUpdateAudio}
-                    onDeleteAudio={handleDeleteAudio}
-                />
+                {mode === 'new' && generatedAudios.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                        <MessageSquarePlus className="h-12 w-12 text-gray-400 mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                            Start a New Conversation
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md">
+                            {hasVoices
+                                ? "Type a message below to generate your first audio. A new session will be created automatically."
+                                : "Please create or save a voice first to start generating audio."
+                            }
+                        </p>
+                    </div>
+                ) : (
+                    <GeneratedAudioList
+                        audios={generatedAudios}
+                        hasMore={hasMore}
+                        onLoadMore={handleLoadMore}
+                        onUpdateAudio={handleUpdateAudio}
+                        onDeleteAudio={handleDeleteAudio}
+                    />
+                )}
             </div>
 
-            {/* Text Input - Compact at bottom */}
+            {/* Text Input */}
             <div className="flex-shrink-0">
                 <TextInput
                     selectedVoiceId={selectedVoiceId}
                     onGenerate={handleGenerate}
-                    disabled={userVoices.length === 0 && savedVoices.length === 0}
+                    disabled={!hasVoices}
+                    placeholder={
+                        mode === 'new'
+                            ? "Type a message to start a new conversation..."
+                            : "Type a message..."
+                    }
                 />
             </div>
         </div>

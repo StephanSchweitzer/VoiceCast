@@ -4,38 +4,72 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { Voice } from '@prisma/client';
 import { useSession } from 'next-auth/react';
 
+interface SpeakSession {
+    id: string;
+    name: string;
+    userId: string;
+    createdAt: string;
+    updatedAt: string;
+    _count: {
+        generatedAudios: number;
+    };
+}
+
 interface SidebarContextType {
     isOpen: boolean;
     toggleSidebar: () => void;
     closeSidebar: () => void;
     openSidebar: () => void;
     voices: Voice[];
+    speakSessions: SpeakSession[];
     isLoading: boolean;
+    isLoadingSessions: boolean;
     error: string | null;
+    sessionError: string | null;
     refreshVoices: () => Promise<void>;
+    refreshSpeakSessions: () => Promise<void>;
+    // Collapsible sections
+    voicesCollapsed: boolean;
+    speakSessionsCollapsed: boolean;
+    toggleVoicesCollapsed: () => void;
+    toggleSpeakSessionsCollapsed: () => void;
 }
 
 const SidebarContext = createContext<SidebarContextType>({
-    isOpen: false, // Default to closed
+    isOpen: false,
     toggleSidebar: () => {},
     closeSidebar: () => {},
     openSidebar: () => {},
     voices: [],
+    speakSessions: [],
     isLoading: false,
+    isLoadingSessions: false,
     error: null,
+    sessionError: null,
     refreshVoices: async () => {},
+    refreshSpeakSessions: async () => {},
+    voicesCollapsed: false,
+    speakSessionsCollapsed: false,
+    toggleVoicesCollapsed: () => {},
+    toggleSpeakSessionsCollapsed: () => {},
 });
 
 export const useSidebar = () => useContext(SidebarContext);
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
-    // Start with closed by default
     const [isOpen, setIsOpen] = useState(false);
     const [isClient, setIsClient] = useState(false);
     const [voices, setVoices] = useState<Voice[]>([]);
+    const [speakSessions, setSpeakSessions] = useState<SpeakSession[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingSessions, setIsLoadingSessions] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [sessionError, setSessionError] = useState<string | null>(null);
     const { data: session, status } = useSession();
+
+    // Collapsible sections state
+    const [voicesCollapsed, setVoicesCollapsed] = useState(false);
+    const [speakSessionsCollapsed, setSpeakSessionsCollapsed] = useState(false);
 
     // Handle client-side mounting and load saved state
     useEffect(() => {
@@ -45,21 +79,42 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
         const savedState = localStorage.getItem('sidebar-open');
         if (savedState !== null) {
             const isOpenSaved = JSON.parse(savedState);
-            // Only apply saved state if we're on desktop
             const isDesktop = window.innerWidth > 768;
             setIsOpen(isDesktop && isOpenSaved);
         } else {
-            // Default behavior: closed on mobile, closed on desktop (changed from open)
             setIsOpen(false);
+        }
+
+        // Load saved collapsible states
+        const savedVoicesCollapsed = localStorage.getItem('sidebar-voices-collapsed');
+        if (savedVoicesCollapsed !== null) {
+            setVoicesCollapsed(JSON.parse(savedVoicesCollapsed));
+        }
+
+        const savedSessionsCollapsed = localStorage.getItem('sidebar-sessions-collapsed');
+        if (savedSessionsCollapsed !== null) {
+            setSpeakSessionsCollapsed(JSON.parse(savedSessionsCollapsed));
         }
     }, []);
 
-    // Save state to localStorage whenever it changes (only on client)
+    // Save state to localStorage whenever it changes
     useEffect(() => {
         if (isClient) {
             localStorage.setItem('sidebar-open', JSON.stringify(isOpen));
         }
     }, [isOpen, isClient]);
+
+    useEffect(() => {
+        if (isClient) {
+            localStorage.setItem('sidebar-voices-collapsed', JSON.stringify(voicesCollapsed));
+        }
+    }, [voicesCollapsed, isClient]);
+
+    useEffect(() => {
+        if (isClient) {
+            localStorage.setItem('sidebar-sessions-collapsed', JSON.stringify(speakSessionsCollapsed));
+        }
+    }, [speakSessionsCollapsed, isClient]);
 
     // Handle window resize
     useEffect(() => {
@@ -68,10 +123,8 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
         const handleResize = () => {
             const isDesktop = window.innerWidth > 768;
             if (!isDesktop) {
-                // Always close on mobile
                 setIsOpen(false);
             } else {
-                // On desktop, restore saved state
                 const savedState = localStorage.getItem('sidebar-open');
                 if (savedState !== null) {
                     setIsOpen(JSON.parse(savedState));
@@ -95,6 +148,14 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
         setIsOpen(true);
     }, []);
 
+    const toggleVoicesCollapsed = useCallback(() => {
+        setVoicesCollapsed(!voicesCollapsed);
+    }, [voicesCollapsed]);
+
+    const toggleSpeakSessionsCollapsed = useCallback(() => {
+        setSpeakSessionsCollapsed(!speakSessionsCollapsed);
+    }, [speakSessionsCollapsed]);
+
     const refreshVoices = useCallback(async () => {
         if (!session) {
             setVoices([]);
@@ -105,7 +166,6 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
         setError(null);
 
         try {
-            // Fetch user's voices - using the correct endpoint now
             const response = await fetch('/api/voices?type=user');
 
             if (!response.ok) {
@@ -118,25 +178,56 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to fetch voices';
             setError(errorMessage);
             console.error('Error fetching voices:', err);
-            setVoices([]); // Clear voices on error
+            setVoices([]);
         } finally {
             setIsLoading(false);
         }
     }, [session]);
 
-    // Fetch voices when session changes
+    const refreshSpeakSessions = useCallback(async () => {
+        if (!session) {
+            setSpeakSessions([]);
+            return;
+        }
+
+        setIsLoadingSessions(true);
+        setSessionError(null);
+
+        try {
+            const response = await fetch('/api/speak-sessions');
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch speak sessions: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setSpeakSessions(data);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Failed to fetch speak sessions';
+            setSessionError(errorMessage);
+            console.error('Error fetching speak sessions:', err);
+            setSpeakSessions([]);
+        } finally {
+            setIsLoadingSessions(false);
+        }
+    }, [session]);
+
+    // Fetch data when session changes
     useEffect(() => {
-        if (status === 'loading') return; // Wait for session to load
+        if (status === 'loading') return;
 
         if (status === 'authenticated') {
             refreshVoices();
+            refreshSpeakSessions();
         } else {
-            // Clear voices when not authenticated
             setVoices([]);
+            setSpeakSessions([]);
             setError(null);
+            setSessionError(null);
             setIsLoading(false);
+            setIsLoadingSessions(false);
         }
-    }, [status, refreshVoices]);
+    }, [status, refreshVoices, refreshSpeakSessions]);
 
     return (
         <SidebarContext.Provider value={{
@@ -145,9 +236,17 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
             closeSidebar,
             openSidebar,
             voices,
+            speakSessions,
             isLoading,
+            isLoadingSessions,
             error,
-            refreshVoices
+            sessionError,
+            refreshVoices,
+            refreshSpeakSessions,
+            voicesCollapsed,
+            speakSessionsCollapsed,
+            toggleVoicesCollapsed,
+            toggleSpeakSessionsCollapsed
         }}>
             {children}
         </SidebarContext.Provider>
