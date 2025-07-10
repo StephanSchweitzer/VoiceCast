@@ -17,7 +17,8 @@ export default async function SpeakPage({ searchParams }: SpeakPageProps) {
     const { session: sessionId } = await searchParams;
 
     return (
-        <div className="flex flex-1 flex-col">
+        // Remove the p-4 wrapper by using a full-width container
+        <div className="w-full h-full">
             <div className="w-full max-w-4xl mx-auto">
                 <SpeakClient
                     userId={session.user.id}
@@ -27,3 +28,8 @@ export default async function SpeakPage({ searchParams }: SpeakPageProps) {
         </div>
     );
 }
+
+// Add this to override the default layout
+SpeakPage.getLayout = function getLayout(page: React.ReactElement) {
+    return <>{page}</>;
+};

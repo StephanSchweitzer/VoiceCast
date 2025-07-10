@@ -10,3 +10,7 @@
         @apply bg-background text-foreground;
     }
 }
+
+.speak-page .p-4 {
+    padding-top: 0 !important;
+}

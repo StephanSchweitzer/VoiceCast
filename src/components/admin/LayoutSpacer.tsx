@@ -13,7 +13,7 @@ export default function LayoutSpacer({ children }: { children: React.ReactNode }
 
     // Calculate top padding based on admin bar presence
     // Navbar = 64px (h-16), Admin bar = 40px (h-10)
-    const topPadding = userIsAdmin ? 'pt-[104px]' : 'pt-16';
+    const topPadding = userIsAdmin ? 'pt-[90px]' : 'pt-16';
 
     return (
         <div className={`flex flex-1 flex-col ${topPadding}`}>

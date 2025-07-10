@@ -189,7 +189,7 @@ export default function SpeakClient({ userId, sessionId }: SpeakClientProps) {
     }
 
     return (
-        <div className="h-[calc(100vh-120px)] flex flex-col space-y-2">
+        <div className="-mt-4 h-[calc(100vh-120px)] flex flex-col space-y-2">
             {/* Hidden audio element for auto-play */}
             <audio ref={audioRef} preload="none" />
 
