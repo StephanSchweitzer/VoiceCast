@@ -62,14 +62,14 @@ export default function Navbar() {
                     : 'top-0'
             }`}>
                 <div className="mx-auto px-4">
-                    <div className="flex items-center justify-between h-16">
-                        {/* Left section with hamburger menu button and logo */}
-                        <div className="flex items-center">
+                    <div className="grid grid-cols-3 items-center h-16">
+                        {/* Left section */}
+                        <div className="flex items-center justify-start">
                             <SidebarToggle />
                             <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white ml-3">
                                 Voicecast
                             </Link>
-                            {/* Mobile Admin Badge - Alternative approach */}
+                            {/* Mobile Admin Badge */}
                             {userIsAdmin && (
                                 <div className="md:hidden ml-3">
                                     <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-full">
@@ -79,8 +79,8 @@ export default function Navbar() {
                             )}
                         </div>
 
-                        {/* Center section with navigation links - only shown on desktop */}
-                        <div className="hidden md:flex">
+                        {/* Center section - truly centered */}
+                        <div className="hidden md:flex justify-center">
                             <div className="flex space-x-4">
                                 <Link
                                     href="/"
@@ -118,8 +118,8 @@ export default function Navbar() {
                             </div>
                         </div>
 
-                        {/* Right section with theme toggle and user actions */}
-                        <div className="flex items-center space-x-4">
+                        {/* Right section */}
+                        <div className="flex items-center justify-end space-x-4">
                             <ThemeToggle />
 
                             {session ? (
