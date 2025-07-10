@@ -44,7 +44,7 @@ const formatDuration = (duration: number | null) => {
 
 // Helper function to get gender display color
 const getGenderColor = (gender: string | null) => {
-    if (!gender) return 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-300';
+    if (!gender) return 'bg-slate-200 dark:bg-gray-900 text-slate-800 dark:text-gray-300';
     switch (gender.toLowerCase()) {
         case 'male':
             return 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300';
@@ -75,7 +75,7 @@ export default function VoiceCard({ voice, isOwner = false }: VoiceCardProps) {
     return (
         <Link
             href={`/voice/${voice.id}`}
-            className="block rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all hover:shadow-md"
+            className="block rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all hover:shadow-md"
         >
             <div className="flex flex-col h-full">
                 {/* Header with title and key info */}
@@ -85,7 +85,7 @@ export default function VoiceCard({ voice, isOwner = false }: VoiceCardProps) {
                             {voice.name}
                         </h3>
                         {formattedDuration && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                            <span className="text-xs text-gray-500 dark:text-gray-400 font-mono bg-slate-200 dark:bg-gray-800 px-2 py-1 rounded">
                                 {formattedDuration}
                             </span>
                         )}
@@ -119,7 +119,7 @@ export default function VoiceCard({ voice, isOwner = false }: VoiceCardProps) {
                         <span className={`rounded-full px-2 py-0.5 ${
                             voice.isPublic
                                 ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+                                : 'bg-slate-200 dark:bg-gray-700 text-slate-800 dark:text-gray-300'
                         }`}>
                             {voice.isPublic ? 'Public' : 'Private'}
                         </span>

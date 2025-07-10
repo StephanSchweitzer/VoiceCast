@@ -122,7 +122,7 @@ export default async function Dashboard() {
             </div>
 
             {/* Existing Voices Section - moved lower in priority */}
-            <div className="overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow">
+            <div className="overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 shadow">
                 <div className="px-4 py-5 sm:p-6">
                     <div className="sm:flex sm:items-center sm:justify-between mb-4">
                         <h2 className="text-lg font-medium text-gray-900 dark:text-white">Your Voice Library</h2>
@@ -178,7 +178,7 @@ export default async function Dashboard() {
                 </div>
             </div>
 
-            <div className="mt-6 overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow">
+            <div className="mt-6 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 shadow">
                 <div className="px-4 py-5 sm:p-6">
                     <h2 className="text-lg font-medium text-gray-900 dark:text-white">Activity</h2>
                     <p className="mt-2 text-gray-500 dark:text-gray-400">

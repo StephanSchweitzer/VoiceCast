@@ -61,7 +61,7 @@ export default function TextInput({ selectedVoiceId, onGenerate, disabled, place
     };
 
     return (
-        <Card className="p-0">
+        <Card className="p-0 bg-gray-100 dark:bg-gray-800">
             <CardContent className="space-y-2 p-3">
                 {/* Emotion Selection - Compact horizontal layout */}
                 <div className="grid grid-cols-6 gap-2">
@@ -91,7 +91,7 @@ export default function TextInput({ selectedVoiceId, onGenerate, disabled, place
                 <Textarea
                     rows={2}
                     placeholder={placeholder || "Enter text to generate speech..."}
-                    className="resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-sm md:text-base"
+                    className="resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-sm md:text-base"
                     value={text}
                     onChange={(e) => setText(e.target.value.slice(0, 300))}
                     maxLength={300}

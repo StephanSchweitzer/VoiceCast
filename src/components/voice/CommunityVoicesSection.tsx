@@ -48,7 +48,7 @@ export default function CommunityVoicesSection() {
 
     if (loading) {
         return (
-            <div className="overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow">
+            <div className="overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 shadow">
                 <div className="px-4 py-5 sm:p-6">
                     <h2 className="text-lg font-medium text-gray-900 dark:text-white">Community Voices</h2>
                     <div className="mt-4 animate-pulse">
@@ -69,7 +69,7 @@ export default function CommunityVoicesSection() {
 
     if (error) {
         return (
-            <div className="overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow">
+            <div className="overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 shadow">
                 <div className="px-4 py-5 sm:p-6">
                     <h2 className="text-lg font-medium text-gray-900 dark:text-white">Community Voices</h2>
                     <div className="mt-4 text-center py-8">
@@ -87,7 +87,7 @@ export default function CommunityVoicesSection() {
     }
 
     return (
-        <div className="overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow">
+        <div className="overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 shadow">
             <div className="px-4 py-5 sm:p-6">
                 <h2 className="text-lg font-medium text-gray-900 dark:text-white">Community Voices</h2>
 
@@ -97,7 +97,7 @@ export default function CommunityVoicesSection() {
                             <Link
                                 key={voice.id}
                                 href={`/voice/${voice.id}`}
-                                className="block rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                className="block rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                             >
                                 <h3 className="text-md font-medium text-gray-900 dark:text-white">{voice.name}</h3>
                                 {voice.description && (

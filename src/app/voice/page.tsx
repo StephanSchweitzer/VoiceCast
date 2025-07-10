@@ -62,7 +62,7 @@ export default async function VoiceListPage() {
             </div>
 
             {/* User's Voices Section */}
-            <div className="overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow mb-8">
+            <div className="overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 shadow mb-8">
                 <div className="px-4 py-5 sm:p-6">
                     <h2 className="text-lg font-medium text-gray-900 dark:text-white">Recent Voices</h2>
 

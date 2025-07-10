@@ -62,9 +62,8 @@ export default function Navbar() {
                     : 'top-0'
             }`}>
                 <div className="mx-auto px-4">
-                    <div className="grid grid-cols-3 items-center h-16">
-                        {/* Left section */}
-                        <div className="flex items-center justify-start">
+                    <div className="flex md:grid md:grid-cols-3 items-center justify-between md:justify-normal h-16">
+                        <div className="flex items-center md:justify-start">
                             <SidebarToggle />
                             <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white ml-3">
                                 Voicecast
@@ -118,8 +117,7 @@ export default function Navbar() {
                             </div>
                         </div>
 
-                        {/* Right section */}
-                        <div className="flex items-center justify-end space-x-4">
+                        <div className="flex items-center space-x-4 md:justify-end">
                             <ThemeToggle />
 
                             {session ? (

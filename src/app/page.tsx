@@ -10,7 +10,7 @@ export default function Home() {
                         Welcome to Voicecast
                     </h1>
                     <p className="text-xl text-gray-600 dark:text-gray-300 max-w-lg mx-auto">
-                        Clone any voice with AI, then choose the exact emotion you want it to express.
+                        Transform any text into authentic, emotional speech in the voice of your choosing.
                     </p>
                 </div>
 
@@ -39,7 +39,7 @@ export default function Home() {
                 <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Link
                         href="/voice/new"
-                        className="group rounded-xl border border-gray-200 dark:border-gray-700 p-6 transition-all duration-200 hover:border-blue-600 dark:hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-lg"
+                        className="group rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 p-6 transition-all duration-200 hover:border-blue-600 dark:hover:border-blue-500 hover:bg-gray-200 dark:hover:bg-gray-700 hover:shadow-lg"
                     >
                         <div className="flex items-center mb-3">
                             <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
@@ -58,7 +58,7 @@ export default function Home() {
 
                     <Link
                         href="/voice/community"
-                        className="group rounded-xl border border-gray-200 dark:border-gray-700 p-6 transition-all duration-200 hover:border-blue-600 dark:hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-lg"
+                        className="group rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 p-6 transition-all duration-200 hover:border-blue-600 dark:hover:border-blue-500 hover:bg-gray-200 dark:hover:bg-gray-700 hover:shadow-lg"
                     >
                         <div className="flex items-center mb-3">
                             <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900">
