@@ -232,19 +232,19 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                                 <Volume2 className="h-5 w-5" />
                             </div>
                             <div className="flex-1">
-                                <CardTitle className="text-xl font-semibold">Audio Sample</CardTitle>
+                                <CardTitle className="text-xl font-semibold">Reference Sample</CardTitle>
                                 <CardDescription className="text-gray-600 dark:text-gray-400">
-                                    Your current voice sample. Changes affect future generations only.
+                                    Your current voice reference. Changes affect future generations only.
                                 </CardDescription>
                             </div>
                             <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
-                                Current Sample
+                                Current Reference
                             </Badge>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="p-4 rounded-xl bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
-                            <Label className="text-sm font-medium mb-3 block">Current Audio Sample</Label>
+                            <Label className="text-sm font-medium mb-3 block">Current Audio Reference</Label>
                             <VoicePlayer audioUrl={voice.audioSample} />
                         </div>
 
