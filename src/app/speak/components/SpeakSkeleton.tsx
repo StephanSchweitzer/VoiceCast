@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export default function SpeakSkeleton() {
     return (
-        <div className="h-[calc(100vh-120px)] flex flex-col space-y-2 animate-pulse">
+        <div className="-mt-4 h-[calc(100vh-120px)] flex flex-col space-y-2 animate-pulse">
             {/* Session Header Skeleton - Minimal */}
             <div className="px-3 py-1 bg-gray-50 dark:bg-gray-900 rounded text-center">
                 <div className="h-5 w-48 bg-gray-200 dark:bg-gray-700 rounded mx-auto"></div>
@@ -10,18 +10,26 @@ export default function SpeakSkeleton() {
 
             {/* Voice Selection Skeleton - Compact (matches actual VoiceSelection structure) */}
             <div className="flex-shrink-0">
-                <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                    <div className="grid grid-cols-2 gap-3">
-                        {/* User Voices */}
-                        <div className="space-y-2">
-                            <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                            <div className="h-9 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded shadow-sm"></div>
+                <div className="bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    {/* Header Section - Always Visible */}
+                    <div className="flex items-center justify-between p-3">
+                        <div className="flex-1">
+                            {/* Voice Library Title */}
+                            <div className="flex items-center space-x-2 mb-1">
+                                <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                <div className="h-3 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                            </div>
+                            {/* Selected Voice Info */}
+                            <div className="flex items-center space-x-2">
+                                <div className="flex items-center space-x-1">
+                                    <div className="h-3 w-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                    <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                </div>
+                                <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                            </div>
                         </div>
-                        {/* Saved Voices */}
-                        <div className="space-y-2">
-                            <div className="h-4 w-28 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                            <div className="h-9 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded shadow-sm"></div>
-                        </div>
+                        {/* Chevron Button */}
+                        <div className="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
                     </div>
                 </div>
             </div>
