@@ -85,14 +85,8 @@ export default function VoiceSelection({
                 onClick={() => setIsExpanded(!isExpanded)}
             >
                 <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                        <Music className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                            Voice Library ({totalVoices} voices)
-                        </span>
-                    </div>
                     {selectedVoice && (
-                        <div className="flex items-center space-x-2 mt-1">
+                        <div className="flex items-center space-x-2">
                             <div className="flex items-center space-x-1">
                                 {selectedVoice.type === 'user' ? (
                                     <User className="h-3 w-3 text-blue-500" />
