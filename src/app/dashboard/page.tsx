@@ -60,7 +60,9 @@ export default async function Dashboard() {
                                 </svg>
                             </div>
                             <h2 className="text-2xl font-bold text-white mb-2">Start Speaking</h2>
-                            <p className="text-lg text-white/90">Create and generate audio with AI voices</p>
+                            <p className="text-lg text-white/90">
+                                Generate expressive speech from your voice library instantly
+                            </p>
                         </div>
                     </Link>
                 </div>
@@ -123,7 +125,7 @@ export default async function Dashboard() {
             <div className="overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow">
                 <div className="px-4 py-5 sm:p-6">
                     <div className="sm:flex sm:items-center sm:justify-between mb-4">
-                        <h2 className="text-lg font-medium text-gray-900 dark:text-white">Your Voices</h2>
+                        <h2 className="text-lg font-medium text-gray-900 dark:text-white">Your Voice Library</h2>
                         <Link
                             href="/voice/new"
                             className="mt-3 inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 sm:mt-0"
