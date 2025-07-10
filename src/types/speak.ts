@@ -40,3 +40,23 @@ export interface Emotion {
     label: string;
     color: string;
 }
+
+// Add this to your existing @/types/speak.ts file
+
+export interface SessionSearchResult {
+    id: string;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+    audioCount: number;
+    latestAudio: {
+        id: string;
+        text: string;
+        createdAt: string;
+        emotion: string;
+        voice: {
+            id: string;
+            name: string;
+        };
+    } | null;
+}

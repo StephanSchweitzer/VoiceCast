@@ -18,9 +18,9 @@ export default function Home() {
                 <div className="mt-12">
                     <Link
                         href="/speak"
-                        className="group relative block w-full overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-center shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-blue-500/50"
+                        className="group relative block w-full rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-center shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-blue-500/50"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 to-purple-600/90 transition-opacity group-hover:opacity-75"></div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 to-purple-600/90 transition-opacity group-hover:opacity-75 rounded-2xl"></div>
                         <div className="relative">
                             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
                                 <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

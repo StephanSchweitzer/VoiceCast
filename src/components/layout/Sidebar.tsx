@@ -194,11 +194,11 @@ export default function Sidebar() {
                                     ))}
                                     {hasMoreSessions && (
                                         <Link
-                                            href="/speak"
+                                            href="/speak/recent-sessions"
                                             onClick={closeSidebar}
                                             className="flex items-center justify-center px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
                                         >
-                                            <span>View all sessions</span>
+                                            <span>All sessions</span>
                                             <ArrowRight className="ml-1 w-3 h-3" />
                                         </Link>
                                     )}
