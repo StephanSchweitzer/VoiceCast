@@ -82,10 +82,10 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
         <div className="space-y-8">
             <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Basic Information */}
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 dark:from-gray-900 dark:via-blue-900/10 dark:to-indigo-900/20">
+                <Card className="bg-gray-100 dark:bg-gray-800">
                     <CardHeader className="pb-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+                            <div className="p-2 rounded-lg bg-blue-600 text-white">
                                 <Edit3 className="h-5 w-5" />
                             </div>
                             <div>
@@ -106,7 +106,7 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                                 onChange={(e) => handleInputChange('name', e.target.value)}
                                 required
                                 placeholder="Enter voice name"
-                                className="h-11 bg-white/80 dark:bg-gray-800/80 border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                className="h-11 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                             />
                         </div>
 
@@ -118,7 +118,7 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                                 onChange={(e) => handleInputChange('description', e.target.value)}
                                 placeholder="Describe this voice..."
                                 rows={4}
-                                className="bg-white/80 dark:bg-gray-800/80 border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+                                className="bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
                             />
                         </div>
 
@@ -132,7 +132,7 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                                     value={formData.genreId || "none"}
                                     onValueChange={(value) => handleInputChange('genreId', value)}
                                 >
-                                    <SelectTrigger className="h-11 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                                    <SelectTrigger className="h-11 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600">
                                         <SelectValue placeholder="Select genre (optional)" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg">
@@ -155,7 +155,7 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                                     value={formData.gender || "none"}
                                     onValueChange={(value) => handleInputChange('gender', value)}
                                 >
-                                    <SelectTrigger className="h-11 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                                    <SelectTrigger className="h-11 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600">
                                         <SelectValue placeholder="Select gender (optional)" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg">
@@ -173,10 +173,10 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                 </Card>
 
                 {/* Privacy & Sharing */}
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-green-50/30 to-emerald-50/40 dark:from-gray-900 dark:via-green-900/10 dark:to-emerald-900/20">
+                <Card className="bg-gray-100 dark:bg-gray-800">
                     <CardHeader className="pb-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white">
+                            <div className="p-2 rounded-lg bg-green-600 text-white">
                                 <Globe className="h-5 w-5" />
                             </div>
                             <div>
@@ -225,10 +225,10 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                 </Card>
 
                 {/* Audio Sample */}
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-purple-50/30 to-pink-50/40 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/20">
+                <Card className="bg-gray-100 dark:bg-gray-800">
                     <CardHeader className="pb-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 text-white">
+                            <div className="p-2 rounded-lg bg-purple-600 text-white">
                                 <Volume2 className="h-5 w-5" />
                             </div>
                             <div className="flex-1">
@@ -237,13 +237,13 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                                     Your current voice reference. Changes affect future generations only.
                                 </CardDescription>
                             </div>
-                            <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                            <Badge variant="secondary" className="bg-slate-200 text-slate-700 dark:bg-gray-700 dark:text-gray-300">
                                 Current Reference
                             </Badge>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <div className="p-4 rounded-xl bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
+                        <div className="p-4 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
                             <Label className="text-sm font-medium mb-3 block">Current Audio Reference</Label>
                             <VoicePlayer audioUrl={voice.audioSample} />
                         </div>
@@ -270,7 +270,7 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                     <Button
                         type="submit"
                         disabled={isLoading}
-                        className="px-8 h-11 font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all duration-200"
+                        className="px-8 h-11 font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-lg transition-all duration-200"
                     >
                         {isLoading ? (
                             <div className="flex items-center gap-2">

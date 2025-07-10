@@ -37,7 +37,7 @@ export default function SessionItem({ session, searchQuery }: SessionItemProps) 
 
     return (
         <Link href={`/speak/session/${session.id}`} className="block">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 hover:shadow-md transition-all cursor-pointer">
                 <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
@@ -59,7 +59,7 @@ export default function SessionItem({ session, searchQuery }: SessionItemProps) 
                                         <span className="text-xs">
                                             {session.latestAudio.voice.name}
                                         </span>
-                                        <Badge variant="secondary" className="text-xs">
+                                        <Badge variant="secondary" className="text-xs bg-slate-200 dark:bg-gray-600 text-slate-700 dark:text-gray-300">
                                             {session.latestAudio.emotion}
                                         </Badge>
                                     </div>

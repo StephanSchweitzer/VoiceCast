@@ -48,7 +48,7 @@ function VoiceViewSkeleton() {
     return (
         <div className="space-y-6 animate-pulse">
             {/* Header Card Skeleton */}
-            <Card>
+            <Card className="bg-gray-100 dark:bg-gray-800">
                 <CardHeader className="pb-4">
                     <div className="space-y-3">
                         {/* Responsive width instead of fixed w-64 */}
@@ -76,7 +76,7 @@ function VoiceViewSkeleton() {
             </Card>
 
             {/* Voice Sample Card Skeleton */}
-            <Card>
+            <Card className="bg-gray-100 dark:bg-gray-800">
                 <CardHeader>
                     <div className="h-6 w-full max-w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
                 </CardHeader>
@@ -86,7 +86,7 @@ function VoiceViewSkeleton() {
             </Card>
 
             {/* TTS Card Skeleton */}
-            <Card>
+            <Card className="bg-gray-100 dark:bg-gray-800">
                 <CardHeader>
                     <div className="h-6 w-full max-w-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
                 </CardHeader>
@@ -104,7 +104,7 @@ function VoiceViewSkeleton() {
 // Error component
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
     return (
-        <Card className="border-red-200 dark:border-red-800">
+        <Card className="bg-gray-100 dark:bg-gray-800 border-red-200 dark:border-red-800">
             <CardContent className="flex flex-col items-center justify-center py-12 space-y-4">
                 <AlertCircle className="h-12 w-12 text-red-500" />
                 <div className="text-center">
@@ -305,7 +305,7 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                 <div className="space-y-6">
                     {/* Manage Section - Only visible to owner */}
                     {isOwner && (
-                        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
+                        <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
                             <CardHeader className="pb-3">
                                 <CardTitle className="flex items-center gap-2 text-lg text-blue-900 dark:text-blue-100">
                                     <Settings className="h-5 w-5" />
@@ -317,7 +317,7 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                             </CardHeader>
                             <CardContent>
                                 <div className="flex flex-wrap gap-3">
-                                    <Button variant="outline" size="sm" asChild className="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                    <Button variant="outline" size="sm" asChild className="bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                         <Link href={`/voice/${voiceId}/edit`}>
                                             <Edit className="h-4 w-4 mr-2" />
                                             Edit Voice
@@ -330,7 +330,7 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                     )}
 
                     {/* Header Card with Voice Information */}
-                    <Card className="overflow-hidden">
+                    <Card className="bg-gray-100 dark:bg-gray-800 overflow-hidden">
                         <CardHeader className="pb-4">
                             <div className="space-y-2">
                                 <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -421,7 +421,7 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                     </Card>
 
                     {/* Voice Sample Card */}
-                    <Card>
+                    <Card className="bg-gray-100 dark:bg-gray-800">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-lg">
                                 <Volume2 className="h-5 w-5" />
@@ -429,14 +429,14 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="p-6 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800">
+                            <div className="p-6 rounded-lg bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
                                 <VoicePlayer audioUrl={voice.audioSample} />
                             </div>
                         </CardContent>
                     </Card>
 
                     {/* Text-to-Speech Card */}
-                    <Card>
+                    <Card className="bg-gray-100 dark:bg-gray-800">
                         <CardHeader>
                             <CardTitle className="text-lg">Text-to-Speech</CardTitle>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -447,7 +447,7 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                             <Textarea
                                 rows={4}
                                 placeholder="Enter text to convert to speech..."
-                                className="resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700"
                                 value={ttsText}
                                 onChange={(e) => setTtsText(e.target.value.slice(0, 300))}
                                 maxLength={300}
@@ -468,7 +468,7 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
 
                             {/* Advanced Settings */}
                             {showAdvanced && (
-                                <div className="border rounded-lg p-4 space-y-4 bg-gray-50 dark:bg-gray-900">
+                                <div className="border rounded-lg p-4 space-y-4 bg-gray-200 dark:bg-gray-900">
                                     <h4 className="font-medium text-sm">Advanced Parameters</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">
@@ -513,6 +513,7 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                                                 onChange={(e) =>
                                                     setTtsParams(prev => ({ ...prev, seed: parseInt(e.target.value) || 0 }))
                                                 }
+                                                className="bg-white dark:bg-gray-800"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -567,18 +568,18 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
 
                     {/* Generated Audio Card */}
                     {generatedAudioUrl && (
-                        <Card className="border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20">
+                        <Card className="bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                             <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-lg text-green-900 dark:text-green-100">
+                                <CardTitle className="flex items-center gap-2 text-lg text-gray-900 dark:text-gray-100">
                                     <Play className="h-5 w-5" />
                                     Generated Audio
                                 </CardTitle>
-                                <p className="text-sm text-green-700 dark:text-green-300">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
                                     Your text has been successfully converted to speech using this voice.
                                 </p>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="p-4 rounded-lg bg-white dark:bg-gray-900 border">
+                                <div className="p-4 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
                                     <VoicePlayer audioUrl={generatedAudioUrl} />
                                 </div>
                                 <div className="flex justify-end">

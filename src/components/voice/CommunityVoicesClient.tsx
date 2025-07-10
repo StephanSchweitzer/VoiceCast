@@ -21,19 +21,31 @@ export default function CommunityVoicesClient({ initialVoices }: CommunityVoices
     const [genreFilter, setGenreFilter] = useState<GenreFilter>('all');
     const [viewType, setViewType] = useState<ViewType>('grid');
     const [filteredVoices, setFilteredVoices] = useState(initialVoices);
+    const [availableGenres, setAvailableGenres] = useState<Genre[]>([]);
 
-    // Extract unique genders and genres from the voices for filter options
+    // Extract unique genders from the voices for filter options
     const availableGenders = Array.from(new Set(
         initialVoices
             .map(voice => voice.gender?.toLowerCase())
             .filter(Boolean)
     )) as string[];
 
-    const availableGenres = Array.from(new Set(
-        initialVoices
-            .map(voice => voice.genre)
-            .filter(Boolean)
-    )) as NonNullable<VoiceWithOptionalUser['genre']>[];
+    // Fetch genres from API
+    useEffect(() => {
+        const fetchGenres = async () => {
+            try {
+                const response = await fetch('/api/genres');
+                if (response.ok) {
+                    const genres = await response.json();
+                    setAvailableGenres(genres);
+                }
+            } catch (error) {
+                console.error('Error fetching genres:', error);
+            }
+        };
+
+        fetchGenres();
+    }, []);
 
     // Apply filters when any filter changes
     useEffect(() => {

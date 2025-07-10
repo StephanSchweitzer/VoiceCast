@@ -186,7 +186,7 @@ export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerP
     const isReady = recordedDuration ? true : isLoaded;
 
     return (
-        <div className="rounded-md bg-gray-50 dark:bg-gray-800/50 p-4">
+        <div className="rounded-md bg-white dark:bg-gray-700 p-4 border border-gray-200 dark:border-gray-600">
             <audio ref={audioRef} src={audioUrl} preload="metadata" />
 
             {error ? (
@@ -220,7 +220,7 @@ export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerP
                             value={currentTime}
                             onChange={handleTimeChange}
                             disabled={!isReady}
-                            className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700 accent-blue-600 dark:accent-blue-500 disabled:opacity-50"
+                            className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-600 accent-blue-600 dark:accent-blue-500 disabled:opacity-50"
                         />
                         <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                             <span>{formatTime(currentTime)}</span>
