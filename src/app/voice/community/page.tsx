@@ -11,7 +11,7 @@ export default async function CommunityVoicesPage() {
         redirect('/auth/login');
     }
 
-    // Fetch public voices WITH genre relation
+    // 🔑 ONLY CHANGE: Add the _count logic and isSaved transformation
     const publicVoicesRaw = await prisma.voice.findMany({
         where: {
             isPublic: true
@@ -23,6 +23,16 @@ export default async function CommunityVoicesPage() {
                     name: true,
                     image: true
                 }
+            },
+            // ✅ ADD THIS: Include the _count for savedBy
+            _count: {
+                select: {
+                    savedBy: {
+                        where: {
+                            userId: session.user.id
+                        }
+                    }
+                }
             }
         },
         orderBy: {
@@ -30,7 +40,17 @@ export default async function CommunityVoicesPage() {
         }
     });
 
-    const publicVoices = JSON.parse(JSON.stringify(publicVoicesRaw));
+    // ✅ ADD THIS: Transform to include isSaved boolean
+    const publicVoicesWithSavedStatus = publicVoicesRaw.map(voice => ({
+        ...voice,
+        // Convert count to boolean - if count > 0, then it's saved
+        isSaved: (voice._count?.savedBy || 0) > 0,
+        // Remove the _count field from the response
+        _count: undefined
+    }));
+
+    // Same serialization as before
+    const publicVoices = JSON.parse(JSON.stringify(publicVoicesWithSavedStatus));
 
     return <CommunityVoicesClient initialVoices={publicVoices} />;
 }

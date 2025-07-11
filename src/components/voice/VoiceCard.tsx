@@ -3,7 +3,7 @@
 import Link from 'next/link';
 
 // Database query result type (dates are Date objects from Prisma)
-interface VoiceCardData {
+export interface VoiceCardData {
     id: string;
     name: string;
     description: string | null;
@@ -19,10 +19,16 @@ interface VoiceCardData {
         name: string;
     } | null;
 }
-
 interface VoiceCardProps {
     voice: VoiceCardData;
     isOwner?: boolean;
+    user?: {
+        name?: string | null;
+        image?: string | null;
+    } | null;
+    variant?: 'grid' | 'list';
+    isSaved?: boolean;
+    onToggleSave?: () => void; // Add this line
 }
 
 // Helper function to format date consistently
@@ -35,8 +41,8 @@ function formatDate(date: Date | string): string {
 }
 
 // Helper function to format duration
-const formatDuration = (duration: number | null) => {
-    if (!duration) return null;
+const formatDuration = (duration: number | null | undefined) => {
+    if (!duration || duration <= 0) return null;
     const minutes = Math.floor(duration / 60);
     const seconds = duration % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -69,9 +75,100 @@ const getGenreColor = (genre: { id: string; name: string }) => {
     return colors[index];
 };
 
-export default function VoiceCard({ voice, isOwner = false }: VoiceCardProps) {
+export default function VoiceCard({ voice, isOwner = false, user, variant = 'grid', isSaved = false }: VoiceCardProps) {
+    // Defensive check to ensure voice is defined
+    if (!voice) {
+        return (
+            <div className="block rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-4">
+                <div className="text-center text-gray-500 dark:text-gray-400">
+                    Voice data unavailable
+                </div>
+            </div>
+        );
+    }
+
     const formattedDuration = formatDuration(voice.duration);
 
+    if (variant === 'list') {
+        return (
+            <Link
+                href={`/voice/${voice.id}`}
+                className="block rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all hover:shadow-md"
+            >
+                <div className="flex items-center">
+                    <div className="flex-shrink-0 h-12 w-12 bg-slate-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                        {user?.image ? (
+                            <img
+                                src={user.image}
+                                alt={user?.name || "User"}
+                                className="h-full w-full object-cover"
+                            />
+                        ) : (
+                            <div className="h-full w-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+                                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                </svg>
+                            </div>
+                        )}
+                    </div>
+                    <div className="ml-4 flex-1">
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">{voice.name}</h3>
+                                    <div className="flex items-center gap-1">
+                                        {formattedDuration && (
+                                            <span className="text-xs text-gray-500 dark:text-gray-400 font-mono bg-slate-200 dark:bg-gray-800 px-2 py-1 rounded">
+                                                {formattedDuration}
+                                            </span>
+                                        )}
+                                        {isSaved && (
+                                            <div className="flex items-center">
+                                                <svg className="h-4 w-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v13a1 1 0 01-1.6.8L10 14.5l-5.4 3.3A1 1 0 013 17V4z" />
+                                                </svg>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                {user && (
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        By: {user?.name || 'Anonymous'}
+                                    </p>
+                                )}
+                                {voice.description && (
+                                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                        {voice.description}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="flex items-center flex-wrap gap-1 ml-4">
+                                <span className={`rounded-full px-2 py-0.5 text-xs ${
+                                    voice.isPublic
+                                        ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300'
+                                        : 'bg-slate-200 dark:bg-gray-700 text-slate-800 dark:text-gray-300'
+                                }`}>
+                                    {voice.isPublic ? 'Public' : 'Private'}
+                                </span>
+                                {voice.gender && (
+                                    <span className={`rounded-full px-2 py-0.5 text-xs ${getGenderColor(voice.gender)}`}>
+                                        {voice.gender.charAt(0).toUpperCase() + voice.gender.slice(1)}
+                                    </span>
+                                )}
+                                {voice.genre && (
+                                    <span className={`rounded-full px-2 py-0.5 text-xs ${getGenreColor(voice.genre)}`}>
+                                        {voice.genre.name}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Link>
+        );
+    }
+
+    // Grid variant (default)
     return (
         <Link
             href={`/voice/${voice.id}`}
@@ -84,12 +181,27 @@ export default function VoiceCard({ voice, isOwner = false }: VoiceCardProps) {
                         <h3 className="text-md font-medium text-gray-900 dark:text-white pr-2 line-clamp-1">
                             {voice.name}
                         </h3>
-                        {formattedDuration && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400 font-mono bg-slate-200 dark:bg-gray-800 px-2 py-1 rounded">
-                                {formattedDuration}
-                            </span>
-                        )}
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                            {formattedDuration && (
+                                <span className="text-xs text-gray-500 dark:text-gray-400 font-mono bg-slate-200 dark:bg-gray-800 px-2 py-1 rounded">
+                                    {formattedDuration}
+                                </span>
+                            )}
+                            {isSaved && (
+                                <div className="flex items-center">
+                                    <svg className="h-4 w-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v13a1 1 0 01-1.6.8L10 14.5l-5.4 3.3A1 1 0 013 17V4z" />
+                                    </svg>
+                                </div>
+                            )}
+                        </div>
                     </div>
+
+                    {user && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                            By: {user?.name || 'Anonymous'}
+                        </p>
+                    )}
 
                     {voice.description && (
                         <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">

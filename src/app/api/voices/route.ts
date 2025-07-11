@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
                 description: true,
                 isPublic: true,
                 audioSample: true,
-                duration: true, // ADD: Include duration in response
+                duration: true,
                 gender: true,
                 createdAt: true,
                 updatedAt: true,
@@ -60,6 +60,16 @@ export async function GET(request: NextRequest) {
                         name: true,
                         image: true
                     }
+                } : false,
+                // Use _count to check if voice is saved by current user
+                _count: session ? {
+                    select: {
+                        savedBy: {
+                            where: {
+                                userId: session.user.id
+                            }
+                        }
+                    }
                 } : false
             },
             orderBy: {
@@ -67,7 +77,16 @@ export async function GET(request: NextRequest) {
             }
         });
 
-        return NextResponse.json(voices);
+        // Transform the result to include isSaved boolean
+        const voicesWithSavedStatus = voices.map(voice => ({
+            ...voice,
+            // Convert count to boolean - if count > 0, then it's saved
+            isSaved: session ? (voice._count?.savedBy || 0) > 0 : false,
+            // Remove the _count field from the response
+            _count: undefined
+        }));
+
+        return NextResponse.json(voicesWithSavedStatus);
     } catch (error) {
         console.error('Error fetching voices:', error);
         return NextResponse.json(
@@ -77,7 +96,7 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// POST - Create new voice
+// POST - Create new voice (unchanged)
 export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
@@ -92,7 +111,7 @@ export async function POST(request: NextRequest) {
             description = '',
             isPublic = false,
             audioSample,
-            duration, // ADD: Accept duration in request
+            duration,
             genreId,
             gender
         } = body;
@@ -111,7 +130,7 @@ export async function POST(request: NextRequest) {
                 description,
                 isPublic,
                 audioSample,
-                duration, // ADD: Store duration in database
+                duration,
                 gender: gender || null,
                 genreId: genreId || null,
                 userId: session.user.id
@@ -122,7 +141,7 @@ export async function POST(request: NextRequest) {
                 description: true,
                 isPublic: true,
                 audioSample: true,
-                duration: true, // ADD: Return duration in response
+                duration: true,
                 gender: true,
                 createdAt: true,
                 updatedAt: true,

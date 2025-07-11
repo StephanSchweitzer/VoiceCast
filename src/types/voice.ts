@@ -52,6 +52,8 @@ export interface VoiceWithOptionalUser extends Voice {
         id: string;
         name: string;
     } | null;
+    // Simplified: just a boolean instead of the complex savedBy array
+    isSaved?: boolean;
 }
 
 export interface CreateVoiceFormData {
