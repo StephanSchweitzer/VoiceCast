@@ -528,11 +528,6 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                                     </div>
                                 )}
                             </Button>
-                            <div className="mt-3 text-center">
-                                <p className="text-xs text-purple-600 dark:text-purple-400">
-                                    Express emotions • Generate audio • Download & share
-                                </p>
-                            </div>
                         </CardContent>
                     </Card>
                 </div>
