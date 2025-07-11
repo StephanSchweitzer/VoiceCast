@@ -84,7 +84,7 @@ export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerP
             console.error('Audio loading error:', e);
             setIsLoaded(false);
             setIsPlaying(false);
-            setError("The audio file associated with this voice was not found. Please try again or upload a new one.");
+            setError("Unable to load audio file. Please try again, and if the issue persists, contact support.");
             if (!recordedDuration) {
                 setDuration(0);
             }
@@ -144,7 +144,7 @@ export default function VoicePlayer({ audioUrl, recordedDuration }: VoicePlayerP
         } catch (playError) {
             console.error('Audio play error:', playError);
             setIsPlaying(false);
-            setError("Unable to play this audio file. Please try again or upload a new one.");
+            setError("Unable to play this audio. Please try again, and if the issue persists, contact support.");
         }
     };
 

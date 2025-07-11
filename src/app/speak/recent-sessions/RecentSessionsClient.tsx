@@ -66,8 +66,8 @@ export default function RecentSessionsClient({ userId }: RecentSessionsClientPro
             setHasMore(data.hasMore);
             setNextCursor(data.nextCursor);
         } catch (err) {
-            console.error('Error loading sessions:', err);
-            setError('Failed to load sessions. Please try again.');
+            console.error('Error loading session:', err);
+            setError('Failed to load session. Please try again.');
         } finally {
             setLoading(false);
             setLoadingMore(false);
