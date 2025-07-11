@@ -21,39 +21,16 @@ export default function AuthRedirect({
         // Don't redirect while loading
         if (status === 'loading') return;
 
-        // If user is authenticated and we haven't redirected yet
-        if (status === 'authenticated' && session && !hasRedirected.current) {
-            hasRedirected.current = true;
+        // If user is authenticated with a valid session and we haven't redirected yet
+        if (status === 'authenticated' && session?.user && !hasRedirected.current) {
+            // Double-check that we have essential session data (indicates valid JWT)
+            const hasValidSession = session.user && (session.user.email || session.user.id);
 
-            // Try to get the 'from' parameter from URL, otherwise use default redirect
-            const searchParams = new URLSearchParams(window.location.search);
-            const from = searchParams.get('from');
-
-            let destination = redirectTo;
-
-            if (from) {
-                try {
-                    const decodedFrom = decodeURIComponent(from);
-                    // Ensure it's an internal path (starts with /) and not a protocol-relative URL
-                    if (decodedFrom.startsWith('/') && !decodedFrom.startsWith('//')) {
-                        // Check if the 'from' URL is an auth page - if so, don't redirect back to it
-                        const isAuthPage = decodedFrom.startsWith('/auth/') ||
-                            decodedFrom === '/login' ||
-                            decodedFrom === '/signin' ||
-                            decodedFrom === '/register' ||
-                            decodedFrom === '/signup';
-
-                        if (!isAuthPage) {
-                            destination = decodedFrom;
-                        }
-                        // If it is an auth page, we keep the default redirectTo destination
-                    }
-                } catch (e) {
-                    // If decoding fails, use default redirect
-                }
+            if (hasValidSession) {
+                hasRedirected.current = true;
+                // Always redirect to dashboard - no complex logic
+                router.replace(redirectTo);
             }
-
-            router.replace(destination);
         }
     }, [session, status, router, redirectTo]);
 
@@ -73,18 +50,18 @@ export default function AuthRedirect({
         );
     }
 
-    // If user is authenticated, don't render the auth form (they're being redirected)
-    if (status === 'authenticated') {
+    // If user is authenticated with valid session data, don't render the auth form
+    if (status === 'authenticated' && session?.user) {
         return (
             <div className="flex h-full items-center justify-center">
                 <div className="text-center space-y-2">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                    <p className="text-sm text-muted-foreground">Redirecting...</p>
+                    <p className="text-sm text-muted-foreground">Redirecting to dashboard...</p>
                 </div>
             </div>
         );
     }
 
-    // User is not authenticated, show the auth form
+    // User is not authenticated or session is invalid, show the auth form
     return <>{children}</>;
 }
