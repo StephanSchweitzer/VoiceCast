@@ -22,24 +22,24 @@ interface GeneratedAudioListProps {
     onDeleteAudio: (audioId: string) => void;
 }
 
-// Emotion color mappings to match TextInput component
+// Emotion color mappings to match TextInput component selected colors
 const EMOTION_COLORS = {
-    neutral: 'bg-gray-500 dark:bg-gray-600',
-    happy: 'bg-yellow-500 dark:bg-yellow-600',
-    sad: 'bg-blue-500 dark:bg-blue-600',
-    angry: 'bg-red-500 dark:bg-red-600',
-    fearful: 'bg-purple-500 dark:bg-purple-600',
-    surprised: 'bg-green-500 dark:bg-green-600'
+    neutral: 'bg-gray-700 dark:bg-gray-400',
+    happy: 'bg-yellow-600 dark:bg-yellow-500',
+    sad: 'bg-blue-600 dark:bg-blue-500',
+    angry: 'bg-red-600 dark:bg-red-500',
+    fearful: 'bg-purple-600 dark:bg-purple-500',
+    surprised: 'bg-emerald-600 dark:bg-emerald-500'
 };
 
-// Lighter background colors for the card backgrounds
+// Lighter background colors for the card backgrounds (updated to use emerald for surprised)
 const EMOTION_BG_COLORS = {
     neutral: 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700',
     happy: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800',
     sad: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
     angry: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
     fearful: 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800',
-    surprised: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+    surprised: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800'
 };
 
 export default function GeneratedAudioList({
@@ -127,10 +127,10 @@ export default function GeneratedAudioList({
     const reversedAudios = [...audios].reverse();
 
     return (
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col bg-transparent">
             <div
                 ref={scrollContainerRef}
-                className="flex-1 overflow-y-auto space-y-3 p-4"
+                className="flex-1 overflow-y-auto space-y-3 p-4 bg-transparent"
             >
                 {/* Load More Button at top */}
                 {hasMore && (

@@ -335,7 +335,7 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
             </div>
 
             {/* Generated Audio List */}
-            <div className="flex-1 min-h-0 bg-gray-50 dark:bg-gray-900 rounded-lg">
+            <div className="flex-1 min-h-0 rounded-lg">
                 {mode === 'new' && generatedAudios.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-center p-8">
                         <MessageSquarePlus className="h-12 w-12 text-gray-400 mb-4" />

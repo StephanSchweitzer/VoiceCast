@@ -13,20 +13,20 @@ import { Emotion } from '@/types/speak';
 
 const EMOTIONS: Emotion[] = [
     { name: 'neutral', icon: '😐', label: 'Neutral', color: 'bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300' },
-    { name: 'happy', icon: '😊', label: 'Happy', color: 'bg-yellow-100 hover:bg-yellow-200 text-yellow-700 dark:bg-yellow-800 dark:hover:bg-yellow-700 dark:text-yellow-300' },
-    { name: 'sad', icon: '😢', label: 'Sad', color: 'bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-300' },
-    { name: 'angry', icon: '😠', label: 'Angry', color: 'bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-800 dark:hover:bg-red-700 dark:text-red-300' },
-    { name: 'fearful', icon: '😨', label: 'Fearful', color: 'bg-purple-100 hover:bg-purple-200 text-purple-700 dark:bg-purple-800 dark:hover:bg-purple-700 dark:text-purple-300' },
-    { name: 'surprised', icon: '😲', label: 'Surprised', color: 'bg-green-100 hover:bg-green-200 text-green-700 dark:bg-green-800 dark:hover:bg-green-700 dark:text-green-300' }
+    { name: 'happy', icon: '😊', label: 'Happy', color: 'bg-yellow-100 hover:bg-yellow-200 text-yellow-800 dark:bg-yellow-900/35 dark:hover:bg-yellow-800/45 dark:text-yellow-300' },
+    { name: 'sad', icon: '😢', label: 'Sad', color: 'bg-blue-100 hover:bg-blue-200 text-blue-800 dark:bg-blue-900/35 dark:hover:bg-blue-800/45 dark:text-blue-300' },
+    { name: 'angry', icon: '😠', label: 'Angry', color: 'bg-red-100 hover:bg-red-200 text-red-800 dark:bg-red-900/35 dark:hover:bg-red-800/45 dark:text-red-300' },
+    { name: 'fearful', icon: '😨', label: 'Fearful', color: 'bg-purple-100 hover:bg-purple-200 text-purple-800 dark:bg-purple-900/35 dark:hover:bg-purple-800/45 dark:text-purple-300' },
+    { name: 'surprised', icon: '😲', label: 'Surprised', color: 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-900/35 dark:hover:bg-emerald-800/45 dark:text-emerald-300' }
 ];
 
 const SELECTED_COLORS = {
-    neutral: 'bg-gray-500 text-white dark:bg-gray-600',
-    happy: 'bg-yellow-500 text-white dark:bg-yellow-600',
-    sad: 'bg-blue-500 text-white dark:bg-blue-600',
-    angry: 'bg-red-500 text-white dark:bg-red-600',
-    fearful: 'bg-purple-500 text-white dark:bg-purple-600',
-    surprised: 'bg-green-500 text-white dark:bg-green-600'
+    neutral: 'bg-gray-700 text-white shadow-md border-gray-700 dark:bg-gray-400 dark:text-gray-900 dark:border-gray-400',
+    happy: 'bg-yellow-600 text-white shadow-md border-yellow-600 dark:bg-yellow-500 dark:text-yellow-900 dark:border-yellow-500',
+    sad: 'bg-blue-600 text-white shadow-md border-blue-600 dark:bg-blue-500 dark:text-blue-900 dark:border-blue-500',
+    angry: 'bg-red-600 text-white shadow-md border-red-600 dark:bg-red-500 dark:text-red-900 dark:border-red-500',
+    fearful: 'bg-purple-600 text-white shadow-md border-purple-600 dark:bg-purple-500 dark:text-purple-900 dark:border-purple-500',
+    surprised: 'bg-emerald-600 text-white shadow-md border-emerald-600 dark:bg-emerald-500 dark:text-emerald-900 dark:border-emerald-500'
 };
 
 interface TextInputProps {
@@ -68,21 +68,30 @@ export default function TextInput({ selectedVoiceId, onGenerate, disabled, place
                     {EMOTIONS.map((emotion) => {
                         const isSelected = selectedEmotion === emotion.name;
                         return (
-                            <Button
+                            <button
                                 key={emotion.name}
-                                size="sm"
                                 onClick={() => setSelectedEmotion(emotion.name)}
-                                className={`flex items-center justify-center h-8 px-2 transition-all duration-300 ease-in-out ${
-                                    isSelected
-                                        ? SELECTED_COLORS[emotion.name as keyof typeof SELECTED_COLORS]
-                                        : `${emotion.color} border border-transparent hover:border-gray-300 dark:hover:border-gray-600`
-                                }`}
-                                variant={isSelected ? "default" : "outline"}
                                 disabled={disabled}
                                 title={emotion.label}
+                                onMouseDown={(e) => e.preventDefault()}
+                                className={`
+                                    flex items-center justify-center h-8 px-2 
+                                    transition-all duration-200 ease-in-out 
+                                    focus:outline-none focus:ring-0 focus:border-transparent
+                                    border rounded-md font-medium text-base
+                                    ${isSelected ? `
+                                        ${SELECTED_COLORS[emotion.name as keyof typeof SELECTED_COLORS]}
+                                    ` : `
+                                        ${emotion.color} 
+                                        border-gray-300 dark:border-gray-600
+                                        hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-sm
+                                        active:scale-95
+                                    `}
+                                    disabled:opacity-50 disabled:cursor-not-allowed
+                                `}
                             >
-                                <span className="text-base">{emotion.icon}</span>
-                            </Button>
+                                <span className="select-none">{emotion.icon}</span>
+                            </button>
                         );
                     })}
                 </div>
