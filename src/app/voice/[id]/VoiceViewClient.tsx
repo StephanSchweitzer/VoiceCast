@@ -25,7 +25,10 @@ import {
     Trash2,
     Settings,
     Download,
-    Play
+    Play,
+    Heart,
+    BookmarkPlus,
+    BookmarkCheck
 } from 'lucide-react';
 import VoicePlayer from '@/components/voice/VoicePlayer';
 import DeleteVoiceButton from '@/components/voice/DeleteVoiceButton';
@@ -157,6 +160,12 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
     const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
     const [ttsError, setTtsError] = useState<string | null>(null);
     const [showAdvanced, setShowAdvanced] = useState(false);
+
+    // New state for saved voice functionality
+    const [isSaved, setIsSaved] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+
     const router = useRouter();
 
     // TTS Parameters
@@ -194,6 +203,11 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
 
             setVoice(voiceData);
 
+            // If not the owner, check if voice is saved
+            if (!isOwner) {
+                checkSavedStatus();
+            }
+
         } catch (err) {
             console.error('Error loading voice:', err);
             const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
@@ -207,6 +221,48 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
             }
         } finally {
             setLoading(false);
+        }
+    };
+
+    const checkSavedStatus = async () => {
+        try {
+            const response = await fetch(`/api/voices/${voiceId}/saved`);
+            if (response.ok) {
+                const data = await response.json();
+                setIsSaved(data.isSaved);
+            }
+        } catch (err) {
+            console.error('Error checking saved status:', err);
+        }
+    };
+
+    const handleSaveToggle = async () => {
+        if (!voice) return;
+
+        setIsSaving(true);
+        setSaveError(null);
+
+        try {
+            const method = isSaved ? 'DELETE' : 'POST';
+            const response = await fetch(`/api/voices/${voiceId}/saved`, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to update saved status');
+            }
+
+            setIsSaved(!isSaved);
+        } catch (err) {
+            console.error('Error toggling saved status:', err);
+            const errorMessage = err instanceof Error ? err.message : 'Failed to update saved status';
+            setSaveError(errorMessage);
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -325,6 +381,73 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                                     </Button>
                                     <DeleteVoiceButton voiceId={voiceId} />
                                 </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Save to Library Section - Only visible to non-owners */}
+                    {!isOwner && (
+                        <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="flex items-center gap-2 text-lg text-green-900 dark:text-green-100">
+                                    <Heart className="h-5 w-5" />
+                                    Voice Library
+                                </CardTitle>
+                                <p className="text-sm text-green-700 dark:text-green-300">
+                                    {isSaved
+                                        ? 'This voice is saved to your library. You can access it anytime from your voice collection.'
+                                        : 'Save this voice to your library for quick access and easy text-to-speech generation.'
+                                    }
+                                </p>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex flex-wrap gap-3">
+                                    <Button
+                                        onClick={handleSaveToggle}
+                                        disabled={isSaving}
+                                        className={`${isSaved
+                                            ? 'bg-green-600 hover:bg-green-700 text-white'
+                                            : 'bg-green-600 hover:bg-green-700 text-white'
+                                        }`}
+                                        size="sm"
+                                    >
+                                        {isSaving ? (
+                                            <div className="flex items-center gap-2">
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                {isSaved ? 'Removing...' : 'Saving...'}
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2">
+                                                {isSaved ? (
+                                                    <>
+                                                        <BookmarkCheck className="h-4 w-4" />
+                                                        Saved to Library
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <BookmarkPlus className="h-4 w-4" />
+                                                        Save to Library
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                    </Button>
+                                    {isSaved && (
+                                        <Button variant="outline" size="sm" asChild className="bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                            <Link href="/voice/library">
+                                                View My Library
+                                            </Link>
+                                        </Button>
+                                    )}
+                                </div>
+                                {saveError && (
+                                    <div className="mt-3 p-2 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                                        <div className="flex items-center gap-2">
+                                            <AlertCircle className="h-4 w-4 text-red-500" />
+                                            <span className="text-sm text-red-700 dark:text-red-300">{saveError}</span>
+                                        </div>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     )}
