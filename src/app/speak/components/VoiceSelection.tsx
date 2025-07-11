@@ -14,9 +14,9 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { ChevronDown, ChevronUp, Check, User, Heart, Music } from 'lucide-react';
+import { ChevronDown, Check, User, Bookmark } from 'lucide-react';
 import { VoiceWithOptionalUser } from '@/types/voice';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 interface VoiceSelectionProps {
@@ -37,7 +37,6 @@ export default function VoiceSelection({
                                            selectedVoiceId,
                                            onVoiceSelect
                                        }: VoiceSelectionProps) {
-    const [isExpanded, setIsExpanded] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
 
     const allVoicesEmpty = userVoices.length === 0 && savedVoices.length === 0;
@@ -60,19 +59,14 @@ export default function VoiceSelection({
     const selectedVoice = enhancedVoices.find(v => v.id === selectedVoiceId);
 
     // Quick stats
-    const totalVoices = enhancedVoices.length;
     const userVoiceCount = userVoices.length;
     const savedVoiceCount = savedVoices.length;
 
-    // Auto-expand if a voice is selected but user might want to see all options
-    // (especially useful when coming from a voice page with URL parameter)
-    useEffect(() => {
-        // If there's a selected voice and only one voice type available, auto-expand
-        // This helps when someone comes from a voice page and wants to see their options
-        if (selectedVoice && (userVoiceCount === 0 || savedVoiceCount === 0)) {
-            setIsExpanded(true);
-        }
-    }, [selectedVoice, userVoiceCount, savedVoiceCount]);
+    // Handle voice selection and close popover
+    const handleVoiceSelect = (voiceId: string) => {
+        onVoiceSelect(voiceId);
+        setIsOpen(false);
+    };
 
     if (allVoicesEmpty) {
         return (
@@ -88,196 +82,170 @@ export default function VoiceSelection({
     }
 
     return (
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-            {/* Collapsed Header - Always Visible */}
-            <div
-                className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                onClick={() => setIsExpanded(!isExpanded)}
+        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <Popover
+                open={isOpen}
+                onOpenChange={setIsOpen}
+                modal={true}
             >
-                <div className="flex-1">
-                    {selectedVoice ? (
-                        <div className="flex items-center space-x-2">
-                            <div className="flex items-center space-x-1">
-                                {selectedVoice.type === 'user' ? (
-                                    <User className="h-3 w-3 text-blue-500" />
-                                ) : (
-                                    <Heart className="h-3 w-3 text-red-500" />
-                                )}
-                                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                    {selectedVoice.name}
-                                </span>
-                                {selectedVoice.type === 'saved' && (
-                                    <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">
-                                        Saved
-                                    </span>
-                                )}
-                            </div>
-                            {selectedVoice.genre && (
-                                <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded">
-                                    {selectedVoice.genre.name}
+                <PopoverTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        role="combobox"
+                        aria-expanded={isOpen}
+                        className="w-full h-auto p-3 justify-between bg-transparent hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg border-0 shadow-none cursor-pointer active:bg-gray-200 dark:active:bg-gray-700"
+                        style={{ cursor: 'pointer' }}
+                    >
+                        <div className="flex-1 text-left">
+                            {selectedVoice ? (
+                                <div className="flex items-center space-x-2">
+                                    <div className="flex items-center space-x-1">
+                                        {selectedVoice.type === 'user' ? (
+                                            <User className="h-3 w-3 text-blue-500" />
+                                        ) : (
+                                            <Bookmark className="h-3 w-3 text-green-500" />
+                                        )}
+                                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                            {selectedVoice.name}
+                                        </span>
+                                        {selectedVoice.type === 'saved' && (
+                                            <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">
+                                                Saved
+                                            </span>
+                                        )}
+                                    </div>
+                                    {selectedVoice.genre && (
+                                        <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded">
+                                            {selectedVoice.genre.name}
+                                        </span>
+                                    )}
+                                </div>
+                            ) : (
+                                <span className="text-sm text-gray-500 dark:text-gray-400">
+                                    Select a voice...
                                 </span>
                             )}
                         </div>
-                    ) : (
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                            Select a voice...
-                        </span>
-                    )}
-                </div>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        <ChevronDown className={cn(
+                            "h-4 w-4 shrink-0 text-gray-500 transition-transform duration-200",
+                            isOpen && "rotate-180"
+                        )} />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                    className="w-[--radix-popover-trigger-width] p-0 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg"
+                    align="start"
+                    side="bottom"
+                    sideOffset={4}
+                    avoidCollisions={true}
+                    sticky="always"
+                    onOpenAutoFocus={(e) => {
+                        // Prevent auto-focus behavior that can cause viewport jumping on mobile
+                        e.preventDefault();
+                    }}
                 >
-                    {isExpanded ? (
-                        <ChevronUp className="h-4 w-4" />
-                    ) : (
-                        <ChevronDown className="h-4 w-4" />
-                    )}
-                </Button>
-            </div>
-
-            {/* Expanded Content */}
-            <div
-                className={`transition-all duration-300 ease-in-out ${
-                    isExpanded
-                        ? 'max-h-96 opacity-100'
-                        : 'max-h-0 opacity-0'
-                }`}
-            >
-                <div className="px-3 pb-3 border-t border-gray-200 dark:border-gray-600">
-                    <div className="pt-3">
-                        {/* Stats Row */}
-                        <div className="flex items-center justify-between mb-3 text-xs text-gray-600 dark:text-gray-400">
-                            <div className="flex items-center space-x-4">
+                    {/* Header with stats - only shown when open */}
+                    <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900">
+                        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+                            <span className="font-medium">Select Voice</span>
+                            <div className="flex items-center space-x-3">
                                 <div className="flex items-center space-x-1">
                                     <User className="h-3 w-3 text-blue-500" />
                                     <span>{userVoiceCount} My Voices</span>
                                 </div>
                                 <div className="flex items-center space-x-1">
-                                    <Heart className="h-3 w-3 text-red-500" />
+                                    <Bookmark className="h-3 w-3 text-green-500" />
                                     <span>{savedVoiceCount} Saved</span>
                                 </div>
                             </div>
                         </div>
-
-                        {/* Searchable Dropdown */}
-                        <Popover open={isOpen} onOpenChange={setIsOpen}>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    role="combobox"
-                                    aria-expanded={isOpen}
-                                    className="w-full justify-between h-11 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm"
-                                >
-                                    {selectedVoice ? (
-                                        <div className="flex items-center space-x-2">
-                                            {selectedVoice.type === 'user' ? (
-                                                <User className="h-4 w-4 text-blue-500" />
-                                            ) : (
-                                                <Heart className="h-4 w-4 text-red-500" />
-                                            )}
-                                            <span>{selectedVoice.name}</span>
-                                        </div>
-                                    ) : (
-                                        "Search and select a voice..."
-                                    )}
-                                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg" align="start">
-                                <Command className="bg-white dark:bg-gray-800 [&_[data-slot=command-input-wrapper]]:border-b-0 [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-0 [&_[cmdk-separator]]:hidden [&_[cmdk-group]]:border-t-0 [&_[cmdk-group-heading]]:border-t-0">
-                                    <CommandInput
-                                        placeholder="Search voices by name, genre, or description..."
-                                        className="h-9 bg-white dark:bg-gray-800 border-none outline-none ring-0 focus:ring-0 focus:outline-none focus:border-none shadow-none"
-                                    />
-                                    <CommandList className="max-h-[200px] bg-white dark:bg-gray-800 border-t-0 [&_[cmdk-list]]:border-t-0">
-                                        <CommandEmpty>No voices found.</CommandEmpty>
-
-                                        {/* User Voices Group */}
-                                        {userVoices.length > 0 && (
-                                            <CommandGroup heading="My Voices" className="border-t-0 [&_[cmdk-group-heading]]:border-t-0">
-                                                {userVoices.map((voice) => (
-                                                    <CommandItem
-                                                        key={voice.id}
-                                                        value={`${voice.name} ${voice.description || ''} ${voice.genre?.name || ''} ${voice.gender || ''}`}
-                                                        onSelect={() => {
-                                                            onVoiceSelect(voice.id);
-                                                            setIsOpen(false);
-                                                            setIsExpanded(false);
-                                                        }}
-                                                        className="flex items-center space-x-2"
-                                                    >
-                                                        <User className="h-4 w-4 text-blue-500" />
-                                                        <div className="flex-1">
-                                                            <div className="font-medium">{voice.name}</div>
-                                                            {voice.description && (
-                                                                <div className="text-xs text-gray-500 truncate">
-                                                                    {voice.description}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        {voice.genre && (
-                                                            <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">
-                                                                {voice.genre.name}
-                                                            </span>
-                                                        )}
-                                                        <Check
-                                                            className={cn(
-                                                                "h-4 w-4",
-                                                                selectedVoiceId === voice.id ? "opacity-100" : "opacity-0"
-                                                            )}
-                                                        />
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandGroup>
-                                        )}
-
-                                        {/* Saved Voices Group */}
-                                        {savedVoices.length > 0 && (
-                                            <CommandGroup heading="Saved Voices">
-                                                {savedVoices.map((voice) => (
-                                                    <CommandItem
-                                                        key={voice.id}
-                                                        value={`${voice.name} ${voice.description || ''} ${voice.genre?.name || ''} ${voice.gender || ''}`}
-                                                        onSelect={() => {
-                                                            onVoiceSelect(voice.id);
-                                                            setIsOpen(false);
-                                                            setIsExpanded(false);
-                                                        }}
-                                                        className="flex items-center space-x-2"
-                                                    >
-                                                        <Heart className="h-4 w-4 text-red-500" />
-                                                        <div className="flex-1">
-                                                            <div className="font-medium">{voice.name}</div>
-                                                            {voice.description && (
-                                                                <div className="text-xs text-gray-500 truncate">
-                                                                    {voice.description}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        {voice.genre && (
-                                                            <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">
-                                                                {voice.genre.name}
-                                                            </span>
-                                                        )}
-                                                        <Check
-                                                            className={cn(
-                                                                "h-4 w-4",
-                                                                selectedVoiceId === voice.id ? "opacity-100" : "opacity-0"
-                                                            )}
-                                                        />
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandGroup>
-                                        )}
-                                    </CommandList>
-                                </Command>
-                            </PopoverContent>
-                        </Popover>
                     </div>
-                </div>
-            </div>
+
+                    <Command
+                        className="bg-white dark:bg-gray-800 [&_[data-slot=command-input-wrapper]]:border-b-0 [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-0 [&_[cmdk-separator]]:hidden [&_[cmdk-group]]:border-t-0 [&_[cmdk-group-heading]]:border-t-0"
+                        shouldFilter={true}
+                    >
+                        <CommandInput
+                            placeholder="Search voices by name, genre, or description..."
+                            className="h-9 bg-white dark:bg-gray-800 border-none outline-none ring-0 focus:ring-0 focus:outline-none focus:border-none shadow-none"
+                            autoFocus={false}
+                        />
+                        <CommandList className="max-h-[200px] bg-white dark:bg-gray-800 border-t-0 [&_[cmdk-list]]:border-t-0 overscroll-contain">
+                            <CommandEmpty>No voices found.</CommandEmpty>
+
+                            {/* User Voices Group */}
+                            {userVoices.length > 0 && (
+                                <CommandGroup heading="My Voices" className="border-t-0 [&_[cmdk-group-heading]]:border-t-0">
+                                    {userVoices.map((voice) => (
+                                        <CommandItem
+                                            key={voice.id}
+                                            value={`${voice.name} ${voice.description || ''} ${voice.genre?.name || ''} ${voice.gender || ''}`}
+                                            onSelect={() => handleVoiceSelect(voice.id)}
+                                            className="flex items-center space-x-2 cursor-pointer"
+                                        >
+                                            <User className="h-4 w-4 text-blue-500" />
+                                            <div className="flex-1">
+                                                <div className="font-medium">{voice.name}</div>
+                                                {voice.description && (
+                                                    <div className="text-xs text-gray-500 truncate">
+                                                        {voice.description}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {voice.genre && (
+                                                <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">
+                                                    {voice.genre.name}
+                                                </span>
+                                            )}
+                                            <Check
+                                                className={cn(
+                                                    "h-4 w-4",
+                                                    selectedVoiceId === voice.id ? "opacity-100" : "opacity-0"
+                                                )}
+                                            />
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            )}
+
+                            {/* Saved Voices Group */}
+                            {savedVoices.length > 0 && (
+                                <CommandGroup heading="Saved Voices">
+                                    {savedVoices.map((voice) => (
+                                        <CommandItem
+                                            key={voice.id}
+                                            value={`${voice.name} ${voice.description || ''} ${voice.genre?.name || ''} ${voice.gender || ''}`}
+                                            onSelect={() => handleVoiceSelect(voice.id)}
+                                            className="flex items-center space-x-2 cursor-pointer"
+                                        >
+                                            <Bookmark className="h-4 w-4 text-green-500" />
+                                            <div className="flex-1">
+                                                <div className="font-medium">{voice.name}</div>
+                                                {voice.description && (
+                                                    <div className="text-xs text-gray-500 truncate">
+                                                        {voice.description}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {voice.genre && (
+                                                <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">
+                                                    {voice.genre.name}
+                                                </span>
+                                            )}
+                                            <Check
+                                                className={cn(
+                                                    "h-4 w-4",
+                                                    selectedVoiceId === voice.id ? "opacity-100" : "opacity-0"
+                                                )}
+                                            />
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            )}
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
         </div>
     );
 }
