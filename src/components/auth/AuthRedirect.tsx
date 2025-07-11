@@ -11,7 +11,7 @@ interface AuthRedirectProps {
 
 export default function AuthRedirect({
                                          children,
-                                         redirectTo = '/dashboard'
+                                         redirectTo = '/'
                                      }: AuthRedirectProps) {
     const { data: session, status } = useSession();
     const router = useRouter();
