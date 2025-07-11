@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -15,13 +15,16 @@ export default function AuthRedirect({
                                      }: AuthRedirectProps) {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const hasRedirected = useRef(false);
 
     useEffect(() => {
         // Don't redirect while loading
         if (status === 'loading') return;
 
-        // If user is authenticated, redirect them away from auth pages
-        if (status === 'authenticated' && session) {
+        // If user is authenticated and we haven't redirected yet
+        if (status === 'authenticated' && session && !hasRedirected.current) {
+            hasRedirected.current = true;
+
             // Try to get the 'from' parameter from URL, otherwise use default redirect
             const searchParams = new URLSearchParams(window.location.search);
             const from = searchParams.get('from');
@@ -43,6 +46,13 @@ export default function AuthRedirect({
             router.replace(destination);
         }
     }, [session, status, router, redirectTo]);
+
+    // Reset redirect flag when status changes to unauthenticated
+    useEffect(() => {
+        if (status === 'unauthenticated') {
+            hasRedirected.current = false;
+        }
+    }, [status]);
 
     // Show loading while checking auth status
     if (status === 'loading') {

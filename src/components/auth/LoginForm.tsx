@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,29 +24,10 @@ export default function LoginForm({
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
     const searchParams = useSearchParams();
 
     // Check for success message from registration
     const message = searchParams.get('message');
-
-    // Get the redirect URL from search params or use default
-    const getRedirectUrl = () => {
-        const from = searchParams.get('from');
-        if (from) {
-            // Decode the URL and make sure it's a valid internal path
-            try {
-                const decodedFrom = decodeURIComponent(from);
-                // Ensure it's an internal path (starts with /)
-                if (decodedFrom.startsWith('/') && !decodedFrom.startsWith('//')) {
-                    return decodedFrom;
-                }
-            } catch (e) {
-                // If decoding fails, use default
-            }
-        }
-        return redirectUrl;
-    };
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -66,10 +47,9 @@ export default function LoginForm({
                 return;
             }
 
-            // Success! Redirect to the intended destination
-            const destination = getRedirectUrl();
-            router.push(destination);
-            router.refresh(); // Refresh to update auth state
+            // Success! Don't manually redirect - let AuthRedirect handle it
+            // The AuthRedirect component will detect the session change and redirect
+            // Keep loading state active until redirect happens
         } catch (error) {
             setError('Something went wrong. Please try again.');
             setLoading(false);
