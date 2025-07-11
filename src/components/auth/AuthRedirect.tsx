@@ -36,7 +36,17 @@ export default function AuthRedirect({
                     const decodedFrom = decodeURIComponent(from);
                     // Ensure it's an internal path (starts with /) and not a protocol-relative URL
                     if (decodedFrom.startsWith('/') && !decodedFrom.startsWith('//')) {
-                        destination = decodedFrom;
+                        // Check if the 'from' URL is an auth page - if so, don't redirect back to it
+                        const isAuthPage = decodedFrom.startsWith('/auth/') ||
+                            decodedFrom === '/login' ||
+                            decodedFrom === '/signin' ||
+                            decodedFrom === '/register' ||
+                            decodedFrom === '/signup';
+
+                        if (!isAuthPage) {
+                            destination = decodedFrom;
+                        }
+                        // If it is an auth page, we keep the default redirectTo destination
                     }
                 } catch (e) {
                     // If decoding fails, use default redirect
