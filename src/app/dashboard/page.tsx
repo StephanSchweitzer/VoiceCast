@@ -12,8 +12,8 @@ export default async function Dashboard() {
         redirect('/auth/login');
     }
 
-    // Fetch user's voices
-    const voices = await prisma.voice.findMany({
+    // Fetch user's own voices
+    const ownVoices = await prisma.voice.findMany({
         where: {
             userId: session.user.id
         },
@@ -22,6 +22,29 @@ export default async function Dashboard() {
         },
         orderBy: {
             updatedAt: 'desc'
+        }
+    });
+
+    // Fetch user's saved voices
+    const savedVoices = await prisma.savedVoice.findMany({
+        where: {
+            userId: session.user.id
+        },
+        include: {
+            voice: {
+                include: {
+                    genre: true,
+                    user: {
+                        select: {
+                            name: true,
+                            id: true
+                        }
+                    }
+                }
+            }
+        },
+        orderBy: {
+            createdAt: 'desc'
         }
     });
 
@@ -130,38 +153,88 @@ export default async function Dashboard() {
                 <div className="px-4 py-5 sm:p-6">
                     <div className="sm:flex sm:items-center sm:justify-between mb-4">
                         <h2 className="text-lg font-medium text-gray-900 dark:text-white">Your Voice Library</h2>
-                        <Link
-                            href="/voice/new"
-                            className="mt-3 inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 sm:mt-0"
-                        >
-                            <svg className="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 3a1 1 0 00-1 1v5H4a1 1 0 100 2h5v5a1 1 0 102 0v-5h5a1 1 0 100-2h-5V4a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            New Voice
-                        </Link>
+                        <div className="mt-3 sm:mt-0 flex gap-2">
+                            <Link
+                                href="/voice/community"
+                                className="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700"
+                            >
+                                <svg className="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                Browse Community
+                            </Link>
+                            <Link
+                                href="/voice/new"
+                                className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                            >
+                                <svg className="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 3a1 1 0 00-1 1v5H4a1 1 0 100 2h5v5a1 1 0 102 0v-5h5a1 1 0 100-2h-5V4a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                New Voice
+                            </Link>
+                        </div>
                     </div>
 
-                    {voices.length > 0 ? (
-                        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                            {voices.map((voice) => (
-                                <VoiceCard
-                                    key={voice.id}
-                                    voice={voice}
-                                    isOwner={true}
-                                />
-                            ))}
-                        </div>
+                    {(ownVoices.length > 0 || savedVoices.length > 0) ? (
+                        <>
+                            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                                {/* Own voices first */}
+                                {ownVoices.slice(0, 8).map((voice) => (
+                                    <VoiceCard
+                                        key={`own-${voice.id}`}
+                                        voice={voice}
+                                        isOwner={true}
+                                    />
+                                ))}
+                                {/* Then saved voices, up to remaining slots */}
+                                {savedVoices.slice(0, Math.max(0, 8 - ownVoices.length)).map((savedVoice) => (
+                                    <div key={`saved-${savedVoice.id}`} className="relative">
+                                        <VoiceCard
+                                            voice={savedVoice.voice}
+                                            isOwner={false}
+                                        />
+                                        {/* Small indicator showing it's saved */}
+                                        <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
+                                            <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        {/* Show creator name */}
+                                        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 text-center">
+                                            by {savedVoice.voice.user.name || 'Anonymous'}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            {/* See all voices link */}
+                            <div className="mt-4 text-right">
+                                <Link
+                                    href="/voice"
+                                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+                                >
+                                    See all voices →
+                                </Link>
+                            </div>
+                        </>
                     ) : (
                         <div className="text-center py-8">
                             <p className="text-gray-500 dark:text-gray-400">
-                                You haven't created any voices yet.
+                                You haven't created or saved any voices yet.
                             </p>
-                            <Link
-                                href="/voice/new"
-                                className="mt-3 inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
-                            >
-                                Create Your First Voice
-                            </Link>
+                            <div className="mt-3 flex justify-center gap-2">
+                                <Link
+                                    href="/voice/new"
+                                    className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                                >
+                                    Create Your First Voice
+                                </Link>
+                                <Link
+                                    href="/voice/community"
+                                    className="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700"
+                                >
+                                    Browse Community
+                                </Link>
+                            </div>
                         </div>
                     )}
                 </div>
