@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, MessageSquarePlus } from 'lucide-react';
 import VoiceSelection from './components/VoiceSelection';
 import TextInput from './components/TextInput';
@@ -18,6 +18,7 @@ interface SpeakClientProps {
 
 export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProps) {
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     // Voice state
     const [userVoices, setUserVoices] = useState<SpeakVoice[]>([]);
@@ -61,12 +62,36 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
             setUserVoices(userVoicesData);
             setSavedVoices(savedVoicesData);
 
-            // Set default voice selection
-            if (userVoicesData.length > 0) {
-                setSelectedVoiceId(userVoicesData[0].id);
-            } else if (savedVoicesData.length > 0) {
-                setSelectedVoiceId(savedVoicesData[0].id);
+            // Check for voice parameter in URL first
+            const urlVoiceId = searchParams.get('voice');
+            let voiceToSelect = '';
+
+            if (urlVoiceId) {
+                // Check if the URL voice exists in user voices or saved voices
+                const allVoices = [...userVoicesData, ...savedVoicesData];
+                const foundVoice = allVoices.find(voice => voice.id === urlVoiceId);
+
+                if (foundVoice) {
+                    voiceToSelect = urlVoiceId;
+                } else {
+                    // Voice from URL not found in user's collection, fall back to default
+                    console.warn(`Voice ${urlVoiceId} not found in user's voices`);
+                }
             }
+
+            // If no URL voice or URL voice not found, use default selection
+            if (!voiceToSelect) {
+                if (userVoicesData.length > 0) {
+                    voiceToSelect = userVoicesData[0].id;
+                } else if (savedVoicesData.length > 0) {
+                    voiceToSelect = savedVoicesData[0].id;
+                }
+            }
+
+            if (voiceToSelect) {
+                setSelectedVoiceId(voiceToSelect);
+            }
+
         } catch (err) {
             if (err instanceof Error && err.name === 'AbortError') {
                 return;
@@ -149,7 +174,7 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
         return () => {
             abortController.abort();
         };
-    }, []);
+    }, [searchParams]); // Add searchParams as dependency to re-run when URL changes
 
     // Load session if in session mode
     useEffect(() => {
@@ -212,7 +237,7 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
                     audioRef.current.play().catch(console.error);
                 }
 
-                // Navigate to the session URL
+                // Navigate to the session URL (remove voice parameter from URL)
                 router.push(`/speak/session/${session.id}`);
 
                 return result;
@@ -305,6 +330,11 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
     // No voices available
     const hasVoices = userVoices.length > 0 || savedVoices.length > 0;
 
+    // Get the selected voice name for display
+    const allVoices = [...userVoices, ...savedVoices];
+    const selectedVoice = allVoices.find(voice => voice.id === selectedVoiceId);
+    const urlVoiceId = searchParams.get('voice');
+
     return (
         <div className="-mt-4 h-[calc(100vh-120px)] flex flex-col space-y-2">
             {/* Hidden audio element for auto-play */}
@@ -316,7 +346,10 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
                     {mode === 'new' ? (
                         <span className="flex items-center justify-center gap-2">
                             <MessageSquarePlus className="h-4 w-4" />
-                            New Conversation
+                            {urlVoiceId && selectedVoice ?
+                                `New Conversation with ${selectedVoice.name}` :
+                                'New Conversation'
+                            }
                         </span>
                     ) : (
                         currentSession?.name || 'Loading...'
@@ -340,7 +373,10 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
                     <div className="h-full flex flex-col items-center justify-center text-center p-8">
                         <MessageSquarePlus className="h-12 w-12 text-gray-400 mb-4" />
                         <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                            Start a New Conversation
+                            {urlVoiceId && selectedVoice ?
+                                `Start Speaking with ${selectedVoice.name}` :
+                                'Start a New Conversation'
+                            }
                         </h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md">
                             {hasVoices
@@ -368,7 +404,9 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
                     disabled={!hasVoices}
                     placeholder={
                         mode === 'new'
-                            ? "Type a message to start a new conversation..."
+                            ? urlVoiceId && selectedVoice
+                                ? `Type a message to start speaking with ${selectedVoice.name}...`
+                                : "Type a message to start a new conversation..."
                             : "Type a message..."
                     }
                 />

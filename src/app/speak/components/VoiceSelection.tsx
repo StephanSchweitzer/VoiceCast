@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/popover';
 import { ChevronDown, ChevronUp, Check, User, Heart, Music } from 'lucide-react';
 import { VoiceWithOptionalUser } from '@/types/voice';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface VoiceSelectionProps {
@@ -64,6 +64,16 @@ export default function VoiceSelection({
     const userVoiceCount = userVoices.length;
     const savedVoiceCount = savedVoices.length;
 
+    // Auto-expand if a voice is selected but user might want to see all options
+    // (especially useful when coming from a voice page with URL parameter)
+    useEffect(() => {
+        // If there's a selected voice and only one voice type available, auto-expand
+        // This helps when someone comes from a voice page and wants to see their options
+        if (selectedVoice && (userVoiceCount === 0 || savedVoiceCount === 0)) {
+            setIsExpanded(true);
+        }
+    }, [selectedVoice, userVoiceCount, savedVoiceCount]);
+
     if (allVoicesEmpty) {
         return (
             <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 text-center">
@@ -85,7 +95,7 @@ export default function VoiceSelection({
                 onClick={() => setIsExpanded(!isExpanded)}
             >
                 <div className="flex-1">
-                    {selectedVoice && (
+                    {selectedVoice ? (
                         <div className="flex items-center space-x-2">
                             <div className="flex items-center space-x-1">
                                 {selectedVoice.type === 'user' ? (
@@ -96,6 +106,11 @@ export default function VoiceSelection({
                                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                                     {selectedVoice.name}
                                 </span>
+                                {selectedVoice.type === 'saved' && (
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">
+                                        Saved
+                                    </span>
+                                )}
                             </div>
                             {selectedVoice.genre && (
                                 <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded">
@@ -103,6 +118,10 @@ export default function VoiceSelection({
                                 </span>
                             )}
                         </div>
+                    ) : (
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                            Select a voice...
+                        </span>
                     )}
                 </div>
                 <Button

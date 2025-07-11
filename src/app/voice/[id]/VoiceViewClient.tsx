@@ -4,13 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Slider } from '@/components/ui/slider';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     Loader2,
     AlertCircle,
@@ -22,29 +18,20 @@ import {
     Globe,
     Lock,
     Edit,
-    Trash2,
     Settings,
-    Download,
-    Play,
     Heart,
     BookmarkPlus,
-    BookmarkCheck
+    BookmarkCheck,
+    MessageSquare,
+    ArrowRight
 } from 'lucide-react';
 import VoicePlayer from '@/components/voice/VoicePlayer';
 import DeleteVoiceButton from '@/components/voice/DeleteVoiceButton';
 import { VoiceWithUser } from '@/types/voice';
-// Removed @gradio/client import - now using API route
 
 interface VoiceViewClientProps {
     voiceId: string;
     userId: string;
-}
-
-interface TTSParameters {
-    exaggeration: number;
-    temperature: number;
-    seed: number;
-    cfgw: number;
 }
 
 function VoiceViewSkeleton() {
@@ -88,16 +75,13 @@ function VoiceViewSkeleton() {
                 </CardContent>
             </Card>
 
-            {/* TTS Card Skeleton */}
+            {/* CTA Card Skeleton */}
             <Card className="bg-gray-100 dark:bg-gray-800">
                 <CardHeader>
                     <div className="h-6 w-full max-w-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="h-24 w-full bg-gray-200 dark:bg-gray-700 rounded-md"></div>
-                    <div className="flex justify-end">
-                        <div className="h-9 w-32 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
-                    </div>
+                    <div className="h-12 w-full bg-gray-200 dark:bg-gray-700 rounded-md"></div>
                 </CardContent>
             </Card>
         </div>
@@ -156,11 +140,6 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
     const [voice, setVoice] = useState<VoiceWithUser | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [ttsText, setTtsText] = useState('');
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
-    const [ttsError, setTtsError] = useState<string | null>(null);
-    const [showAdvanced, setShowAdvanced] = useState(false);
 
     // New state for saved voice functionality
     const [isSaved, setIsSaved] = useState(false);
@@ -168,14 +147,6 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
     const [saveError, setSaveError] = useState<string | null>(null);
 
     const router = useRouter();
-
-    // TTS Parameters
-    const [ttsParams, setTtsParams] = useState<TTSParameters>({
-        exaggeration: 0.5,
-        temperature: 0.8,
-        seed: 0,
-        cfgw: 0.5
-    });
 
     const loadVoice = async () => {
         try {
@@ -264,74 +235,39 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
         }
     };
 
+    const handleStartSpeaking = async () => {
+        if (!voice) return;
+
+        // If user doesn't own the voice and hasn't saved it, auto-save it first
+        if (!isOwner && !isSaved) {
+            try {
+                setIsSaving(true);
+                const response = await fetch(`/api/voices/${voiceId}/saved`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+                    setIsSaved(true);
+                }
+                // Continue to speak page even if save fails - don't block the user
+            } catch (err) {
+                console.error('Error auto-saving voice:', err);
+                // Continue to speak page even if save fails
+            } finally {
+                setIsSaving(false);
+            }
+        }
+
+        // Navigate to speak page with voice parameter
+        router.push(`/speak?voice=${voiceId}`);
+    };
+
     useEffect(() => {
         loadVoice();
     }, [voiceId, userId]);
-
-    const handleGenerateSpeech = async () => {
-        if (!ttsText.trim() || !voice || !voice.audioSample) return;
-
-        setIsGenerating(true);
-        setTtsError(null);
-        setGeneratedAudioUrl(null);
-
-        try {
-            // Call our API route instead of Gradio directly
-            const response = await fetch('/api/tts', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    text: ttsText,
-                    audioSampleUrl: voice.audioSample,
-                    exaggeration: ttsParams.exaggeration,
-                    temperature: ttsParams.temperature,
-                    seed: ttsParams.seed,
-                    cfgw: ttsParams.cfgw,
-                }),
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || 'Failed to generate speech');
-            }
-
-            if (result.success && result.audioUrl) {
-                setGeneratedAudioUrl(result.audioUrl);
-            } else {
-                throw new Error('No audio URL received from the API');
-            }
-
-        } catch (error) {
-            console.error('Error generating speech:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Failed to generate speech';
-            setTtsError(errorMessage);
-        } finally {
-            setIsGenerating(false);
-        }
-    };
-
-    const handleDownloadAudio = async () => {
-        if (!generatedAudioUrl) return;
-
-        try {
-            const response = await fetch(generatedAudioUrl);
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${voice?.name || 'generated'}_tts_${Date.now()}.wav`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        } catch (error) {
-            console.error('Error downloading audio:', error);
-        }
-    };
 
     const handleRetry = () => {
         loadVoice();
@@ -556,167 +492,49 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                         </CardContent>
                     </Card>
 
-                    {/* Text-to-Speech Card */}
-                    <Card className="bg-gray-100 dark:bg-gray-800">
-                        <CardHeader>
-                            <CardTitle className="text-lg">Text-to-Speech</CardTitle>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Type or paste text below to convert it to speech using this voice. Maximum 300 characters.
+                    {/* Call-to-Action Card - Start Speaking */}
+                    <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20 border-purple-200 dark:border-purple-800">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="flex items-center gap-2 text-xl text-purple-900 dark:text-purple-100">
+                                <MessageSquare className="h-6 w-6" />
+                                Ready to use this voice?
+                            </CardTitle>
+                            <p className="text-purple-700 dark:text-purple-300">
+                                Start generating speech with {voice.name}. Choose from different emotions and create personalized audio messages.
+                                {!isOwner && !isSaved && (
+                                    <span className="block mt-1 text-sm font-medium">
+                                        This voice will be saved to your library automatically.
+                                    </span>
+                                )}
                             </p>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <Textarea
-                                rows={4}
-                                placeholder="Enter text to convert to speech..."
-                                className="resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700"
-                                value={ttsText}
-                                onChange={(e) => setTtsText(e.target.value.slice(0, 300))}
-                                maxLength={300}
-                            />
-
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    {ttsText.length}/300 characters
-                                </span>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setShowAdvanced(!showAdvanced)}
-                                >
-                                    {showAdvanced ? 'Hide' : 'Show'} Advanced Settings
-                                </Button>
-                            </div>
-
-                            {/* Advanced Settings */}
-                            {showAdvanced && (
-                                <div className="border rounded-lg p-4 space-y-4 bg-gray-200 dark:bg-gray-900">
-                                    <h4 className="font-medium text-sm">Advanced Parameters</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="exaggeration" className="text-xs">
-                                                Exaggeration: {ttsParams.exaggeration}
-                                            </Label>
-                                            <Slider
-                                                id="exaggeration"
-                                                min={0}
-                                                max={1}
-                                                step={0.05}
-                                                value={[ttsParams.exaggeration]}
-                                                onValueChange={([value]) =>
-                                                    setTtsParams(prev => ({ ...prev, exaggeration: value }))
-                                                }
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="temperature" className="text-xs">
-                                                Temperature: {ttsParams.temperature}
-                                            </Label>
-                                            <Slider
-                                                id="temperature"
-                                                min={0}
-                                                max={1}
-                                                step={0.05}
-                                                value={[ttsParams.temperature]}
-                                                onValueChange={([value]) =>
-                                                    setTtsParams(prev => ({ ...prev, temperature: value }))
-                                                }
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="seed" className="text-xs">
-                                                Random Seed (0 for random)
-                                            </Label>
-                                            <Input
-                                                id="seed"
-                                                type="number"
-                                                min={0}
-                                                value={ttsParams.seed}
-                                                onChange={(e) =>
-                                                    setTtsParams(prev => ({ ...prev, seed: parseInt(e.target.value) || 0 }))
-                                                }
-                                                className="bg-white dark:bg-gray-800"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="cfgw" className="text-xs">
-                                                CFG/Pace: {ttsParams.cfgw}
-                                            </Label>
-                                            <Slider
-                                                id="cfgw"
-                                                min={0}
-                                                max={1}
-                                                step={0.05}
-                                                value={[ttsParams.cfgw]}
-                                                onValueChange={([value]) =>
-                                                    setTtsParams(prev => ({ ...prev, cfgw: value }))
-                                                }
-                                            />
-                                        </div>
+                        <CardContent>
+                            <Button
+                                onClick={handleStartSpeaking}
+                                disabled={isSaving}
+                                size="lg"
+                                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70"
+                            >
+                                {isSaving ? (
+                                    <div className="flex items-center justify-center gap-3">
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                        <span className="font-semibold">Saving & Starting...</span>
                                     </div>
-                                </div>
-                            )}
-
-                            {ttsError && (
-                                <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                                    <div className="flex items-center gap-2">
-                                        <AlertCircle className="h-4 w-4 text-red-500" />
-                                        <span className="text-sm text-red-700 dark:text-red-300">{ttsError}</span>
+                                ) : (
+                                    <div className="flex items-center justify-center gap-3">
+                                        <MessageSquare className="h-5 w-5" />
+                                        <span className="font-semibold">Start Speaking with {voice.name}</span>
+                                        <ArrowRight className="h-4 w-4" />
                                     </div>
-                                </div>
-                            )}
-
-                            <div className="flex justify-end">
-                                <Button
-                                    onClick={handleGenerateSpeech}
-                                    disabled={!ttsText.trim() || isGenerating || !voice.audioSample}
-                                    className="w-full h-10 text-sm font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 hover:border-blue-700 shadow-sm disabled:bg-gray-400 disabled:border-gray-400 disabled:text-white disabled:cursor-not-allowed"
-                                >
-                                    {isGenerating ? (
-                                        <div className="flex items-center gap-2">
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            Generating...
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-center gap-2">
-                                            <Volume2 className="h-4 w-4" />
-                                            Generate Speech
-                                        </div>
-                                    )}
-                                </Button>
+                                )}
+                            </Button>
+                            <div className="mt-3 text-center">
+                                <p className="text-xs text-purple-600 dark:text-purple-400">
+                                    Express emotions • Generate audio • Download & share
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
-
-                    {/* Generated Audio Card */}
-                    {generatedAudioUrl && (
-                        <Card className="bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-lg text-gray-900 dark:text-gray-100">
-                                    <Play className="h-5 w-5" />
-                                    Generated Audio
-                                </CardTitle>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    Your text has been successfully converted to speech using this voice.
-                                </p>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="p-4 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
-                                    <VoicePlayer audioUrl={generatedAudioUrl} />
-                                </div>
-                                <div className="flex justify-end">
-                                    <Button
-                                        onClick={handleDownloadAudio}
-                                        variant="outline"
-                                        size="sm"
-                                        className="flex items-center gap-2"
-                                    >
-                                        <Download className="h-4 w-4" />
-                                        Download Audio
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
                 </div>
             )}
         </div>
