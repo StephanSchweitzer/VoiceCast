@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import {Bookmark} from "lucide-react";
 
 // Database query result type (dates are Date objects from Prisma)
 export interface VoiceCardData {
@@ -189,9 +190,7 @@ export default function VoiceCard({ voice, isOwner = false, user, variant = 'gri
                             )}
                             {isSaved && (
                                 <div className="flex items-center">
-                                    <svg className="h-4 w-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v13a1 1 0 01-1.6.8L10 14.5l-5.4 3.3A1 1 0 013 17V4z" />
-                                    </svg>
+                                    <Bookmark className="h-4 w-4 text-green-500" />
                                 </div>
                             )}
                         </div>

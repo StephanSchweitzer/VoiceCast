@@ -299,12 +299,6 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
     if (loadingVoices || (mode === 'session' && loadingSession)) {
         return (
             <div>
-                <div className="flex items-center justify-center mb-6">
-                    <Loader2 className="h-5 w-5 animate-spin text-primary mr-2" />
-                    <span className="text-sm text-muted-foreground">
-                        {loadingVoices ? 'Loading voices...' : 'Loading session...'}
-                    </span>
-                </div>
                 <SpeakSkeleton />
             </div>
         );
@@ -335,8 +329,10 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
     const selectedVoice = allVoices.find(voice => voice.id === selectedVoiceId);
     const urlVoiceId = searchParams.get('voice');
 
+    // Replace the main container div (around line 242) with this:
+
     return (
-        <div className="-mt-4 h-[calc(100vh-120px)] flex flex-col space-y-2">
+        <div className="-mt-4 h-[calc(100vh-80px)] flex flex-col space-y-1">
             {/* Hidden audio element for auto-play */}
             <audio ref={audioRef} preload="none" />
 
@@ -345,12 +341,12 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
                 <h2 className="text-sm font-medium text-gray-900 dark:text-white">
                     {mode === 'new' ? (
                         <span className="flex items-center justify-center gap-2">
-                            <MessageSquarePlus className="h-4 w-4" />
+                        <MessageSquarePlus className="h-4 w-4" />
                             {urlVoiceId && selectedVoice ?
                                 `New Conversation with ${selectedVoice.name}` :
                                 'New Conversation'
                             }
-                        </span>
+                    </span>
                     ) : (
                         currentSession?.name || 'Loading...'
                     )}
@@ -367,8 +363,8 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
                 />
             </div>
 
-            {/* Generated Audio List */}
-            <div className="flex-1 min-h-0 rounded-lg">
+            {/* Generated Audio List - Now gets more space */}
+            <div className="flex-1 min-h-0 bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden">
                 {mode === 'new' && generatedAudios.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-center p-8">
                         <MessageSquarePlus className="h-12 w-12 text-gray-400 mb-4" />
@@ -396,7 +392,7 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
                 )}
             </div>
 
-            {/* Text Input */}
+            {/* Text Input - Stays exactly the same */}
             <div className="flex-shrink-0">
                 <TextInput
                     selectedVoiceId={selectedVoiceId}

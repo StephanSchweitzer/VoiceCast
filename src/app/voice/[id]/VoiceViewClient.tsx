@@ -23,7 +23,7 @@ import {
     BookmarkPlus,
     BookmarkCheck,
     MessageSquare,
-    ArrowRight
+    ArrowRight, Bookmark
 } from 'lucide-react';
 import VoicePlayer from '@/components/voice/VoicePlayer';
 import DeleteVoiceButton from '@/components/voice/DeleteVoiceButton';
@@ -324,13 +324,13 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                         <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
                             <CardHeader className="pb-3">
                                 <CardTitle className="flex items-center gap-2 text-lg text-green-900 dark:text-green-100">
-                                    <Heart className="h-5 w-5" />
+                                    <Bookmark className="h-5 w-5 text-green-500" />
                                     Voice Library
                                 </CardTitle>
                                 <p className="text-sm text-green-700 dark:text-green-300">
                                     {isSaved
-                                        ? 'This voice is saved to your library. You can access it anytime from your voice collection.'
-                                        : 'Save this voice to your library for quick access and easy text-to-speech generation.'
+                                        ? 'This voice is saved to your library.'
+                                        : 'Save this voice to your library.'
                                     }
                                 </p>
                             </CardHeader>

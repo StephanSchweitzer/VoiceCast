@@ -55,7 +55,7 @@ export default function GeneratedAudioList({
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+        bottomRef.current?.scrollIntoView({behavior: 'smooth'});
     }, [audios.length]);
 
     const handleLoadMore = async () => {
@@ -83,12 +83,12 @@ export default function GeneratedAudioList({
         try {
             const response = await fetch(`/api/generated-audio/${audioId}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ isLiked }),
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({isLiked}),
             });
 
             if (!response.ok) throw new Error('Failed to update rating');
-            onUpdateAudio(audioId, { isLiked: isLiked ?? undefined });
+            onUpdateAudio(audioId, {isLiked: isLiked ?? undefined});
         } catch (error) {
             console.error('Error updating like status:', error);
         }
@@ -110,7 +110,7 @@ export default function GeneratedAudioList({
     if (audios.length === 0) {
         return (
             <div className="h-full flex flex-col items-center justify-center space-y-4 text-center p-8">
-                <Volume2 className="h-12 w-12 text-gray-400" />
+                <Volume2 className="h-12 w-12 text-gray-400"/>
                 <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                         Start Your Conversation
@@ -126,11 +126,13 @@ export default function GeneratedAudioList({
     // Reverse the order to show newest at bottom (like messaging)
     const reversedAudios = [...audios].reverse();
 
+    // Updated GeneratedAudioList component return statement
     return (
-        <div className="h-full flex flex-col bg-transparent">
+        <div className="h-full flex flex-col">
             <div
                 ref={scrollContainerRef}
-                className="flex-1 overflow-y-auto space-y-3 p-4 bg-transparent"
+                className="flex-1 overflow-y-auto space-y-3 p-4"
+                style={{paddingBottom: '1rem'}} // Ensure some bottom padding but not excessive
             >
                 {/* Load More Button at top */}
                 {hasMore && (
@@ -144,7 +146,7 @@ export default function GeneratedAudioList({
                         >
                             {loadingMore ? (
                                 <div className="flex items-center gap-2">
-                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    <Loader2 className="h-3 w-3 animate-spin"/>
                                     Loading...
                                 </div>
                             ) : (
@@ -160,7 +162,8 @@ export default function GeneratedAudioList({
                     const emotionBgClass = EMOTION_BG_COLORS[audio.emotion as keyof typeof EMOTION_BG_COLORS] || EMOTION_BG_COLORS.neutral;
 
                     return (
-                        <Card key={audio.id} className={`w-full border ${emotionBgClass} shadow-sm hover:shadow-md transition-shadow duration-200`}>
+                        <Card key={audio.id}
+                              className={`w-full border ${emotionBgClass} shadow-sm hover:shadow-md transition-shadow duration-200`}>
                             <CardContent className="p-4">
                                 <div className="flex justify-between gap-4">
                                     {/* Left side - Content */}
@@ -172,30 +175,33 @@ export default function GeneratedAudioList({
                                                 <p className="text-sm font-medium text-gray-900 dark:text-white mb-1 line-clamp-2">
                                                     "{audio.text}"
                                                 </p>
-                                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                                <div
+                                                    className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                                                     <span className="font-medium">{audio.voice.name}</span>
                                                     <span>•</span>
-                                                    <span className={`px-2 py-1 rounded text-white ${emotionColorClass} capitalize`}>
-                                                        {audio.emotion}
-                                                    </span>
+                                                    <span
+                                                        className={`px-2 py-1 rounded text-white ${emotionColorClass} capitalize`}>
+                                                    {audio.emotion}
+                                                </span>
                                                     <span>•</span>
                                                     <span>
-                                                        {new Date(audio.createdAt).toLocaleTimeString([], {
-                                                            hour: '2-digit',
-                                                            minute: '2-digit'
-                                                        })}
-                                                    </span>
+                                                    {new Date(audio.createdAt).toLocaleTimeString([], {
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Audio Player */}
-                                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                                            <VoicePlayer audioUrl={audio.filePath} />
+                                        <div
+                                            className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                                            <VoicePlayer audioUrl={audio.filePath}/>
                                         </div>
                                     </div>
 
-                                    {/* Right side - Actions (centered with audio player) */}
+                                    {/* Right side - Actions */}
                                     <div className="flex flex-col gap-1 flex-shrink-0 justify-center self-center">
                                         <Button
                                             variant="ghost"
@@ -207,7 +213,7 @@ export default function GeneratedAudioList({
                                                     : 'text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
                                             }`}
                                         >
-                                            <ThumbsUp className="h-4 w-4" />
+                                            <ThumbsUp className="h-4 w-4"/>
                                         </Button>
 
                                         <Button
@@ -220,7 +226,7 @@ export default function GeneratedAudioList({
                                                     : 'text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20'
                                             }`}
                                         >
-                                            <ThumbsDown className="h-4 w-4" />
+                                            <ThumbsDown className="h-4 w-4"/>
                                         </Button>
 
                                         <Button
@@ -229,7 +235,7 @@ export default function GeneratedAudioList({
                                             onClick={() => deleteAudio(audio.id)}
                                             className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                                         >
-                                            <Trash2 className="h-4 w-4" />
+                                            <Trash2 className="h-4 w-4"/>
                                         </Button>
                                     </div>
                                 </div>
@@ -238,8 +244,8 @@ export default function GeneratedAudioList({
                     );
                 })}
 
-                {/* Auto-scroll anchor */}
-                <div ref={bottomRef} />
+                {/* Auto-scroll anchor - removed extra spacing */}
+                <div ref={bottomRef}/>
             </div>
         </div>
     );

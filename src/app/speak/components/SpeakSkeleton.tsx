@@ -2,10 +2,10 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export default function SpeakSkeleton() {
     return (
-        <div className="-mt-4 h-[calc(100vh-120px)] md:h-[calc(100vh-120px)] flex flex-col space-y-1 md:space-y-2 animate-pulse">
+        <div className="-mt-4 h-[calc(100vh-80px)] md:h-[calc(100vh-80px)] flex flex-col space-y-1 md:space-y-2 animate-pulse">
             {/* Session Header Skeleton - Minimal */}
             <div className="px-3 py-1 bg-gray-50 dark:bg-gray-900 rounded text-center flex-shrink-0">
-                <div className="h-5 w-48 bg-gray-200 dark:bg-gray-700 rounded mx-auto"></div>
+                <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded mx-auto"></div>
             </div>
 
             {/* Voice Selection Skeleton - Compact (matches new VoiceSelection structure) */}
@@ -29,7 +29,7 @@ export default function SpeakSkeleton() {
                 </div>
             </div>
 
-            {/* Generated Audio List Skeleton - MAXIMIZED main section */}
+            {/* Generated Audio List Skeleton - MAXIMIZED main section with more space */}
             <div className="flex-1 min-h-0 bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden">
                 <div className="h-full flex flex-col">
                     <div className="flex-1 overflow-y-auto space-y-3 p-4">
@@ -38,7 +38,7 @@ export default function SpeakSkeleton() {
                 </div>
             </div>
 
-            {/* Text Input Skeleton - Compact at bottom (matches new TextInput structure) */}
+            {/* Text Input Skeleton - Compact at bottom (matches actual TextInput structure) */}
             <div className="flex-shrink-0">
                 <Card className="p-0">
                     <CardContent className="space-y-2 p-3">
