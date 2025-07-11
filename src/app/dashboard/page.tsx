@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import Link from 'next/link';
+import VoiceCard from '@/components/voice/VoiceCard';
 
 export default async function Dashboard() {
     const session = await getServerSession(authOptions);
@@ -15,6 +16,9 @@ export default async function Dashboard() {
     const voices = await prisma.voice.findMany({
         where: {
             userId: session.user.id
+        },
+        include: {
+            genre: true
         },
         orderBy: {
             updatedAt: 'desc'
@@ -46,7 +50,7 @@ export default async function Dashboard() {
                     Dashboard
                 </h1>
 
-                {/* Large Speak Button */}
+                {/* Start Speaking Card */}
                 <div className="mb-8">
                     <Link
                         href="/speak"
@@ -67,7 +71,7 @@ export default async function Dashboard() {
                     </Link>
                 </div>
 
-                {/* Previous Sessions */}
+                {/* Recent Sessions */}
                 <div className="mb-8">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Recent Sessions</h2>
@@ -121,8 +125,8 @@ export default async function Dashboard() {
                 </div>
             </div>
 
-            {/* Existing Voices Section - moved lower in priority */}
-            <div className="overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 shadow">
+            {/* Voice Library Card */}
+            <div className="mb-6 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 shadow">
                 <div className="px-4 py-5 sm:p-6">
                     <div className="sm:flex sm:items-center sm:justify-between mb-4">
                         <h2 className="text-lg font-medium text-gray-900 dark:text-white">Your Voice Library</h2>
@@ -140,26 +144,11 @@ export default async function Dashboard() {
                     {voices.length > 0 ? (
                         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                             {voices.map((voice) => (
-                                <Link
+                                <VoiceCard
                                     key={voice.id}
-                                    href={`/voice/${voice.id}`}
-                                    className="block rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                                >
-                                    <h3 className="text-md font-medium text-gray-900 dark:text-white">{voice.name}</h3>
-                                    {voice.description && (
-                                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-                                            {voice.description}
-                                        </p>
-                                    )}
-                                    <div className="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
-                                        <span className={`mr-2 rounded-full px-2 py-0.5 ${voice.isPublic ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}`}>
-                                            {voice.isPublic ? 'Public' : 'Private'}
-                                        </span>
-                                        <span>
-                                            Created: {new Date(voice.createdAt).toLocaleDateString()}
-                                        </span>
-                                    </div>
-                                </Link>
+                                    voice={voice}
+                                    isOwner={true}
+                                />
                             ))}
                         </div>
                     ) : (
@@ -178,7 +167,8 @@ export default async function Dashboard() {
                 </div>
             </div>
 
-            <div className="mt-6 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 shadow">
+            {/* Activity Card */}
+            <div className="overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 shadow">
                 <div className="px-4 py-5 sm:p-6">
                     <h2 className="text-lg font-medium text-gray-900 dark:text-white">Activity</h2>
                     <p className="mt-2 text-gray-500 dark:text-gray-400">
