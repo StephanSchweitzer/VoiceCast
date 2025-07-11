@@ -151,6 +151,7 @@ function formatDate(date: string | Date): string {
     });
 }
 
+
 export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProps) {
     const [voice, setVoice] = useState<VoiceWithUser | null>(null);
     const [loading, setLoading] = useState(true);
@@ -181,19 +182,24 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
             setLoading(true);
             setError(null);
 
-            const response = await fetch(`/api/voices/${voiceId}`);
+            // Fetch voice data and saved status simultaneously
+            const [voiceResponse, savedResponse] = await Promise.all([
+                fetch(`/api/voices/${voiceId}`),
+                fetch(`/api/voices/${voiceId}/saved`)
+            ]);
 
-            if (!response.ok) {
-                if (response.status === 404) {
+            // Handle voice data response
+            if (!voiceResponse.ok) {
+                if (voiceResponse.status === 404) {
                     throw new Error('This voice could not be found or may have been deleted.');
-                } else if (response.status === 401 || response.status === 403) {
+                } else if (voiceResponse.status === 401 || voiceResponse.status === 403) {
                     throw new Error('You don\'t have permission to view this voice.');
                 } else {
                     throw new Error('Failed to load voice data. Please try again.');
                 }
             }
 
-            const voiceData: VoiceWithUser = await response.json();
+            const voiceData: VoiceWithUser = await voiceResponse.json();
 
             // Check permissions client-side as well
             const isOwner = voiceData.userId === userId;
@@ -201,12 +207,16 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                 throw new Error('This voice is private and you don\'t have permission to view it.');
             }
 
-            setVoice(voiceData);
-
-            // If not the owner, check if voice is saved
-            if (!isOwner) {
-                checkSavedStatus();
+            // Handle saved status for non-owners
+            let savedStatus = false;
+            if (!isOwner && savedResponse.ok) {
+                const savedData = await savedResponse.json();
+                savedStatus = savedData.isSaved;
             }
+
+            // Update all state at once to prevent flicker
+            setVoice(voiceData);
+            setIsSaved(savedStatus);
 
         } catch (err) {
             console.error('Error loading voice:', err);
@@ -221,18 +231,6 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
             }
         } finally {
             setLoading(false);
-        }
-    };
-
-    const checkSavedStatus = async () => {
-        try {
-            const response = await fetch(`/api/voices/${voiceId}/saved`);
-            if (response.ok) {
-                const data = await response.json();
-                setIsSaved(data.isSaved);
-            }
-        } catch (err) {
-            console.error('Error checking saved status:', err);
         }
     };
 
@@ -434,7 +432,7 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
                                     </Button>
                                     {isSaved && (
                                         <Button variant="outline" size="sm" asChild className="bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                            <Link href="/voice/library">
+                                            <Link href="/voice">
                                                 View My Library
                                             </Link>
                                         </Button>
