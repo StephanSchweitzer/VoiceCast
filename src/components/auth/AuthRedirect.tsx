@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
 interface AuthRedirectProps {
@@ -14,7 +13,6 @@ export default function AuthRedirect({
                                          redirectTo = '/'
                                      }: AuthRedirectProps) {
     const { data: session, status } = useSession();
-    const router = useRouter();
     const hasRedirected = useRef(false);
 
     useEffect(() => {
@@ -28,11 +26,11 @@ export default function AuthRedirect({
 
             if (hasValidSession) {
                 hasRedirected.current = true;
-                // Always redirect to dashboard - no complex logic
-                router.replace(redirectTo);
+                // Use full page refresh to ensure server and client are completely in sync
+                window.location.href = redirectTo;
             }
         }
-    }, [session, status, router, redirectTo]);
+    }, [session, status, redirectTo]);
 
     // Reset redirect flag when status changes to unauthenticated
     useEffect(() => {

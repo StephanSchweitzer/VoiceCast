@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +24,6 @@ export default function LoginForm({
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
     const searchParams = useSearchParams();
 
     // Check for success message from registration
@@ -48,11 +47,7 @@ export default function LoginForm({
                 return;
             }
 
-            // Success! Don't manually redirect - let AuthRedirect handle it
-            // But first, refresh to sync server-side session with client-side
-            router.refresh();
-
-            // The AuthRedirect component will detect the session change and redirect
+            // Success! AuthRedirect will handle the full page refresh redirect
             // Keep loading state active until redirect happens
         } catch (error) {
             setError('Something went wrong. Please try again.');
