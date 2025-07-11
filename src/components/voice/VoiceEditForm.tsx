@@ -79,11 +79,11 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
     };
 
     return (
-        <div className="space-y-8">
-            <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Basic Information */}
-                <Card className="bg-gray-100 dark:bg-gray-800">
-                    <CardHeader className="pb-4">
+                <Card className="border border-gray-200 dark:border-gray-700 shadow-sm bg-gray-50 dark:bg-gray-800">
+                    <CardHeader className="pb-3">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-blue-600 text-white">
                                 <Edit3 className="h-5 w-5" />
@@ -96,7 +96,7 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="name" className="text-sm font-medium">Voice Name</Label>
                             <Input
@@ -122,7 +122,7 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                             />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="genre" className="text-sm font-medium flex items-center gap-2">
                                     <Settings className="h-4 w-4" />
@@ -135,7 +135,7 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                                     <SelectTrigger className="h-11 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600">
                                         <SelectValue placeholder="Select genre (optional)" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg">
+                                    <SelectContent className="bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 shadow-lg">
                                         <SelectItem value="none">No genre</SelectItem>
                                         {genres.map((genre) => (
                                             <SelectItem key={genre.id} value={genre.id}>
@@ -158,7 +158,7 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                                     <SelectTrigger className="h-11 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600">
                                         <SelectValue placeholder="Select gender (optional)" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg">
+                                    <SelectContent className="bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 shadow-lg">
                                         <SelectItem value="none">No gender specified</SelectItem>
                                         {GENDER_OPTIONS.map((gender) => (
                                             <SelectItem key={gender} value={gender}>
@@ -173,8 +173,8 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                 </Card>
 
                 {/* Privacy & Sharing */}
-                <Card className="bg-gray-100 dark:bg-gray-800">
-                    <CardHeader className="pb-4">
+                <Card className="border border-gray-200 dark:border-gray-700 shadow-sm bg-gray-50 dark:bg-gray-800">
+                    <CardHeader className="pb-3">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-green-600 text-white">
                                 <Globe className="h-5 w-5" />
@@ -190,14 +190,14 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                     <CardContent className="space-y-4">
                         <div>
                             <Label className="text-sm font-medium mb-3 block">Visibility</Label>
-                            <div className="flex rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+                            <div className="flex rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden bg-white dark:bg-gray-700">
                                 <button
                                     type="button"
                                     onClick={() => handleInputChange('isPublic', false)}
                                     className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                                         !formData.isPublic
                                             ? 'bg-blue-600 text-white'
-                                            : 'bg-white hover:bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                                            : 'bg-transparent hover:bg-gray-100 text-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                                     }`}
                                 >
                                     Private
@@ -208,7 +208,7 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                                     className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                                         formData.isPublic
                                             ? 'bg-blue-600 text-white'
-                                            : 'bg-white hover:bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                                            : 'bg-transparent hover:bg-gray-100 text-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                                     }`}
                                 >
                                     Public
@@ -225,8 +225,8 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                 </Card>
 
                 {/* Audio Sample */}
-                <Card className="bg-gray-100 dark:bg-gray-800">
-                    <CardHeader className="pb-4">
+                <Card className="border border-gray-200 dark:border-gray-700 shadow-sm bg-gray-50 dark:bg-gray-800">
+                    <CardHeader className="pb-3">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-purple-600 text-white">
                                 <Volume2 className="h-5 w-5" />
@@ -258,7 +258,7 @@ export default function VoiceEditForm({ voice, genres, onSuccess, onVoiceUpdated
                 </Card>
 
                 {/* Submit Actions */}
-                <div className="flex justify-end space-x-4 pt-4">
+                <div className="flex justify-end space-x-4 pt-3">
                     <Button
                         type="button"
                         variant="outline"

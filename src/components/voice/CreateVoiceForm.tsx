@@ -80,11 +80,11 @@ export default function CreateVoiceForm({ genres }: CreateVoiceFormProps) {
     };
 
     return (
-        <div className="mt-8 space-y-8">
-            <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="mt-8 space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Basic Information */}
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 dark:from-gray-900 dark:via-blue-900/10 dark:to-indigo-900/20">
-                    <CardHeader className="pb-4">
+                <Card className="border border-gray-200 dark:border-gray-700 shadow-sm bg-gray-50 dark:bg-gray-800">
+                    <CardHeader className="pb-3">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
                                 <User className="h-5 w-5" />
@@ -97,7 +97,7 @@ export default function CreateVoiceForm({ genres }: CreateVoiceFormProps) {
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="name" className="text-sm font-medium">Voice Name</Label>
                             <Input
@@ -107,7 +107,7 @@ export default function CreateVoiceForm({ genres }: CreateVoiceFormProps) {
                                 onChange={(e) => handleInputChange('name', e.target.value)}
                                 required
                                 placeholder="e.g., Professional Narrator, Friendly Assistant..."
-                                className="h-11 bg-white/80 dark:bg-gray-800/80 border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                className="h-11 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                             />
                         </div>
 
@@ -119,11 +119,11 @@ export default function CreateVoiceForm({ genres }: CreateVoiceFormProps) {
                                 onChange={(e) => handleInputChange('description', e.target.value)}
                                 placeholder="Describe the tone, style, and ideal use cases for this voice..."
                                 rows={4}
-                                className="bg-white/80 dark:bg-gray-800/80 border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+                                className="bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
                             />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="genre" className="text-sm font-medium flex items-center gap-2">
                                     <Settings className="h-4 w-4" />
@@ -133,10 +133,10 @@ export default function CreateVoiceForm({ genres }: CreateVoiceFormProps) {
                                     value={formData.genreId}
                                     onValueChange={(value) => handleInputChange('genreId', value)}
                                 >
-                                    <SelectTrigger className="h-11 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                                    <SelectTrigger className="h-11 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600">
                                         <SelectValue placeholder="Select a genre (optional)" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg">
+                                    <SelectContent className="bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 shadow-lg">
                                         {genres.map((genre) => (
                                             <SelectItem key={genre.id} value={genre.id}>
                                                 {genre.name}
@@ -155,10 +155,10 @@ export default function CreateVoiceForm({ genres }: CreateVoiceFormProps) {
                                     value={formData.gender}
                                     onValueChange={(value) => handleInputChange('gender', value)}
                                 >
-                                    <SelectTrigger className="h-11 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                                    <SelectTrigger className="h-11 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600">
                                         <SelectValue placeholder="Select gender (optional)" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg">
+                                    <SelectContent className="bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 shadow-lg">
                                         {GENDER_OPTIONS.map((gender) => (
                                             <SelectItem key={gender} value={gender}>
                                                 {gender}
@@ -172,8 +172,8 @@ export default function CreateVoiceForm({ genres }: CreateVoiceFormProps) {
                 </Card>
 
                 {/* Privacy & Sharing */}
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-green-50/30 to-emerald-50/40 dark:from-gray-900 dark:via-green-900/10 dark:to-emerald-900/20">
-                    <CardHeader className="pb-4">
+                <Card className="border border-gray-200 dark:border-gray-700 shadow-sm bg-gray-50 dark:bg-gray-800">
+                    <CardHeader className="pb-3">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white">
                                 <Globe className="h-5 w-5" />
@@ -189,14 +189,14 @@ export default function CreateVoiceForm({ genres }: CreateVoiceFormProps) {
                     <CardContent className="space-y-4">
                         <div>
                             <Label className="text-sm font-medium mb-3 block">Visibility</Label>
-                            <div className="flex rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+                            <div className="flex rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden bg-white dark:bg-gray-700">
                                 <button
                                     type="button"
                                     onClick={() => handleInputChange('isPublic', false)}
                                     className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                                         !formData.isPublic
                                             ? 'bg-blue-600 text-white'
-                                            : 'bg-white hover:bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                                            : 'bg-transparent hover:bg-gray-100 text-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                                     }`}
                                 >
                                     Private
@@ -207,7 +207,7 @@ export default function CreateVoiceForm({ genres }: CreateVoiceFormProps) {
                                     className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                                         formData.isPublic
                                             ? 'bg-blue-600 text-white'
-                                            : 'bg-white hover:bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                                            : 'bg-transparent hover:bg-gray-100 text-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                                     }`}
                                 >
                                     Public
@@ -224,8 +224,8 @@ export default function CreateVoiceForm({ genres }: CreateVoiceFormProps) {
                 </Card>
 
                 {/* Audio Sample */}
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-purple-50/30 to-pink-50/40 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/20">
-                    <CardHeader className="pb-4">
+                <Card className="border border-gray-200 dark:border-gray-700 shadow-sm bg-gray-50 dark:bg-gray-800">
+                    <CardHeader className="pb-3">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 text-white">
                                 <Mic className="h-5 w-5" />
@@ -239,7 +239,7 @@ export default function CreateVoiceForm({ genres }: CreateVoiceFormProps) {
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="rounded-xl bg-white/60 dark:bg-gray-800/60 p-6 border border-gray-200 dark:border-gray-700">
+                        <div className="rounded-xl bg-white dark:bg-gray-700 p-4 border border-gray-200 dark:border-gray-600">
                             <AudioUploader
                                 onAudioUploadedAction={handleAudioUploaded}
                                 isLoading={isLoading}
@@ -249,7 +249,7 @@ export default function CreateVoiceForm({ genres }: CreateVoiceFormProps) {
                 </Card>
 
                 {/* Submit Actions */}
-                <div className="flex justify-end space-x-4 pt-4">
+                <div className="flex justify-end space-x-4 pt-3">
                     <Button
                         type="button"
                         variant="outline"
