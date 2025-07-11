@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import VoicePlayer from '@/components/voice/VoicePlayer';
 
 interface AudioUploaderProps {
-    onAudioUploadedAction: (audioUrl: string, duration?: number) => void; // ADD duration parameter
+    onAudioUploadedAction: (audioUrl: string, duration?: number) => void;
     isLoading?: boolean;
 }
 
@@ -22,27 +22,80 @@ export default function AudioUploader({ onAudioUploadedAction, isLoading = false
     const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
     const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
     const [recordingTime, setRecordingTime] = useState(0);
-    const [recordingDuration, setRecordingDuration] = useState<number>(0); // ADD: Final duration
+    const [recordingDuration, setRecordingDuration] = useState<number>(0);
     const [uploadProgress, setUploadProgress] = useState<'file' | 'recording' | null>(null);
+
+    // Add drag and drop state
+    const [isDragOver, setIsDragOver] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const startTimeRef = useRef<number>(0); // ADD: Track actual start time
+    const startTimeRef = useRef<number>(0);
 
-    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
+    // Validate and process file
+    const processFile = (file: File) => {
         if (file && file.type.startsWith('audio/')) {
             setSelectedFile(file);
             const url = URL.createObjectURL(file);
             setPreviewUrl(url);
+            return true;
         } else if (file) {
             toast.error('Invalid file type. Please select an audio file.');
+            return false;
+        }
+        return false;
+    };
+
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            processFile(file);
+        }
+    };
+
+    // Drag and drop handlers
+    const handleDragEnter = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Only set drag over to false if we're leaving the drop zone itself
+        // Check if the related target is outside the drop zone
+        const dropZone = e.currentTarget as HTMLElement;
+        const relatedTarget = e.relatedTarget as HTMLElement;
+        if (!dropZone.contains(relatedTarget)) {
+            setIsDragOver(false);
+        }
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Ensure we show the correct drag effect
+        e.dataTransfer.dropEffect = 'copy';
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(false);
+
+        const files = Array.from(e.dataTransfer.files);
+        const audioFile = files.find(file => file.type.startsWith('audio/'));
+
+        if (audioFile) {
+            processFile(audioFile);
+        } else if (files.length > 0) {
+            toast.error('Please drop an audio file (MP3, WAV, OGG, etc.)');
         }
     };
 
     const startRecording = async () => {
-        // Check if we're on the client side and if getUserMedia is supported
         if (typeof window === 'undefined') {
             toast.error('Recording is not available during server rendering');
             return;
@@ -65,9 +118,8 @@ export default function AudioUploader({ onAudioUploadedAction, isLoading = false
             };
 
             mediaRecorder.onstop = () => {
-                // Calculate actual duration
                 const finalDuration = (Date.now() - startTimeRef.current) / 1000;
-                setRecordingDuration(Math.round(finalDuration * 10) / 10); // Round to 1 decimal
+                setRecordingDuration(Math.round(finalDuration * 10) / 10);
 
                 const blob = new Blob(chunks, { type: 'audio/wav' });
                 setRecordedBlob(blob);
@@ -80,9 +132,8 @@ export default function AudioUploader({ onAudioUploadedAction, isLoading = false
             mediaRecorder.start();
             setIsRecording(true);
             setRecordingTime(0);
-            startTimeRef.current = Date.now(); // Track actual start time
+            startTimeRef.current = Date.now();
 
-            // Start timer
             timerRef.current = setInterval(() => {
                 setRecordingTime(prev => prev + 1);
             }, 1000);
@@ -115,7 +166,7 @@ export default function AudioUploader({ onAudioUploadedAction, isLoading = false
         setRecordedBlob(null);
         setRecordedUrl(null);
         setRecordingTime(0);
-        setRecordingDuration(0); // Reset duration
+        setRecordingDuration(0);
         if (timerRef.current) {
             clearInterval(timerRef.current);
         }
@@ -133,10 +184,9 @@ export default function AudioUploader({ onAudioUploadedAction, isLoading = false
 
         if (audioSource === 'file' && selectedFile) {
             fileToUpload = selectedFile;
-            // For uploaded files, duration will be extracted by VoicePlayer
         } else if (audioSource === 'recording' && recordedBlob) {
             fileToUpload = new File([recordedBlob], 'recording.wav', { type: 'audio/wav' });
-            duration = recordingDuration; // Use the tracked duration
+            duration = recordingDuration;
         } else {
             return;
         }
@@ -145,7 +195,6 @@ export default function AudioUploader({ onAudioUploadedAction, isLoading = false
         const formData = new FormData();
         formData.append('audio', fileToUpload);
 
-        // ADD: Include duration in the upload for recordings
         if (duration) {
             formData.append('duration', duration.toString());
         }
@@ -161,7 +210,6 @@ export default function AudioUploader({ onAudioUploadedAction, isLoading = false
             }
 
             const data = await response.json();
-            // Pass both URL and duration to parent component
             onAudioUploadedAction(data.url, duration);
             toast.success('Audio uploaded successfully!');
         } catch (error) {
@@ -194,16 +242,28 @@ export default function AudioUploader({ onAudioUploadedAction, isLoading = false
             <TabsContent value="upload" className="mt-6">
                 <div className="space-y-6">
                     <div
-                        className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-blue-400 dark:hover:border-blue-500 transition-colors cursor-pointer group"
+                        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer group ${
+                            isDragOver
+                                ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 dark:border-blue-400'
+                                : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500'
+                        }`}
                         onClick={() => fileInputRef.current?.click()}
+                        onDragEnter={handleDragEnter}
+                        onDragLeave={handleDragLeave}
+                        onDragOver={handleDragOver}
+                        onDrop={handleDrop}
                     >
                         <div className="flex flex-col items-center space-y-4">
-                            <div className="p-4 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 group-hover:from-blue-200 group-hover:to-indigo-200 dark:group-hover:from-blue-800/40 dark:group-hover:to-indigo-800/40 transition-all">
+                            <div className={`p-4 rounded-full transition-all ${
+                                isDragOver
+                                    ? 'bg-gradient-to-br from-blue-200 to-indigo-200 dark:from-blue-800/40 dark:to-indigo-800/40'
+                                    : 'bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 group-hover:from-blue-200 group-hover:to-indigo-200 dark:group-hover:from-blue-800/40 dark:group-hover:to-indigo-800/40'
+                            }`}>
                                 <FileAudio className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div>
                                 <p className="text-lg font-medium text-gray-900 dark:text-white">
-                                    Choose audio file
+                                    {isDragOver ? 'Drop audio file here' : 'Choose audio file'}
                                 </p>
                                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                     or drag and drop it here
@@ -230,7 +290,6 @@ export default function AudioUploader({ onAudioUploadedAction, isLoading = false
                                     <FileAudio className="h-4 w-4" />
                                     Preview
                                 </Label>
-                                {/* For uploaded files, don't pass recordedDuration */}
                                 <VoicePlayer audioUrl={previewUrl} />
                             </CardContent>
                         </Card>
@@ -306,7 +365,6 @@ export default function AudioUploader({ onAudioUploadedAction, isLoading = false
                                             <Mic className="h-4 w-4 text-green-600" />
                                             Recorded Audio ({recordingDuration}s)
                                         </Label>
-                                        {/* PASS the recorded duration to VoicePlayer */}
                                         <VoicePlayer
                                             audioUrl={recordedUrl}
                                             recordedDuration={recordingDuration}

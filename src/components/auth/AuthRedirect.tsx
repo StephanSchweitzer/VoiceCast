@@ -54,7 +54,7 @@ export default function AuthRedirect({
             <div className="flex h-full items-center justify-center">
                 <div className="text-center space-y-2">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                    <p className="text-sm text-muted-foreground">Redirecting to dashboard...</p>
+                    <p className="text-sm text-muted-foreground">Redirecting to homepage...</p>
                 </div>
             </div>
         );
