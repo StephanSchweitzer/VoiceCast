@@ -100,7 +100,7 @@ export default async function Dashboard() {
                         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Recent Sessions</h2>
                         {speakSessions.length > 3 && (
                             <Link
-                                href="/speak/recent-sessions"
+                                href="/session-history"
                                 className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
                             >
                                 All sessions →

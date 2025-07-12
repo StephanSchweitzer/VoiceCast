@@ -12,7 +12,7 @@ export default async function SpeakNewPage() {
 
     return (
         <div className="w-full h-full">
-            <div className="w-full max-w-4xl mx-auto">
+            <div className="mx-auto max-w-6xl sm:px-6 lg:px-8">
                 <SpeakClient
                     userId={session.user.id}
                     mode="new"

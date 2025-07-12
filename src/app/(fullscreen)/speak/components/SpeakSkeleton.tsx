@@ -2,14 +2,17 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export default function SpeakSkeleton() {
     return (
-        <div className="-mt-4 h-[calc(100vh-80px)] md:h-[calc(100vh-80px)] flex flex-col space-y-1 md:space-y-2 animate-pulse">
-            {/* Session Header Skeleton - Minimal */}
-            <div className="px-3 py-1 bg-gray-50 dark:bg-gray-900 rounded text-center flex-shrink-0">
+        <div className="h-[calc(100vh-72px)] flex flex-col animate-pulse">
+            {/* Hidden audio element for auto-play (matches SpeakClient) */}
+            <audio preload="none" />
+
+            {/* Session Header - Matches SpeakClient padding */}
+            <div className="px-5 py-1 rounded text-center flex-shrink-0">
                 <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded mx-auto"></div>
             </div>
 
-            {/* Voice Selection Skeleton - Compact (matches new VoiceSelection structure) */}
-            <div className="flex-shrink-0">
+            {/* Voice Selection - Matches SpeakClient spacing */}
+            <div className="flex-shrink-0 mt-2">
                 <div className="bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                     {/* Collapsed Header - Always Visible (matches actual VoiceSelection) */}
                     <div className="flex items-center justify-between p-3">
@@ -29,17 +32,18 @@ export default function SpeakSkeleton() {
                 </div>
             </div>
 
-            {/* Generated Audio List Skeleton - MAXIMIZED main section with more space */}
-            <div className="flex-1 min-h-0 bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden">
-                <div className="h-full flex flex-col">
-                    <div className="flex-1 overflow-y-auto space-y-3 p-4">
-                        {/* Empty container - audio cards will appear here */}
-                    </div>
+            {/* Generated Audio List - Matches SpeakClient structure exactly */}
+            <div className="flex-1 min-h-0 rounded-lg overflow-hidden mt-2">
+                <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                    {/* Placeholder content matching the "new conversation" state */}
+                    <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded mb-3"></div>
+                    <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                    <div className="h-4 w-80 bg-gray-200 dark:bg-gray-700 rounded"></div>
                 </div>
             </div>
 
-            {/* Text Input Skeleton - Compact at bottom (matches actual TextInput structure) */}
-            <div className="flex-shrink-0">
+            {/* Text Input - Matches SpeakClient spacing */}
+            <div className="flex-shrink-0 mt-2">
                 <Card className="p-0">
                     <CardContent className="space-y-2 p-3">
                         {/* Emotion Selection - No label, compact buttons in single row */}

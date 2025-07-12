@@ -193,7 +193,7 @@ export default function CommunityVoicesClient({ initialVoices }: CommunityVoices
                                 name="search"
                                 id="search"
                                 className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-12 sm:text-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-md"
-                                placeholder="Search by name, description, genre, or gender"
+                                placeholder="Search voices..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />

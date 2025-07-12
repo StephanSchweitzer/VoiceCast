@@ -21,7 +21,7 @@ export default function SessionsSearch({
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
-                className="pl-10 pr-10"
+                className="pl-10 pr-10 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700"
             />
             {value && (
                 <Button

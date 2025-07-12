@@ -47,6 +47,7 @@ export default function Sidebar() {
         { href: '/dashboard', label: 'Dashboard' },
         { href: '/speak', label: 'Speak' },
         { href: '/voice', label: 'Voices' },
+        { href: '/voice/community', label: 'Community' },
     ];
 
     const adminNavItems = [
@@ -65,7 +66,7 @@ export default function Sidebar() {
     };
 
     // Calculate top padding based on admin bar presence
-    const topPadding = userIsAdmin ? 'pt-26' : 'pt-16'; // pt-26 = 6.5rem (64px + 40px)
+    const topPadding = userIsAdmin ? 'pt-16' : 'pt-16';
 
     // Limit voices to 4 for display
     const displayedVoices = voices.slice(0, 4);
@@ -194,7 +195,7 @@ export default function Sidebar() {
                                     ))}
                                     {hasMoreSessions && (
                                         <Link
-                                            href="/speak/recent-sessions"
+                                            href="/session-history"
                                             onClick={closeSidebar}
                                             className="flex items-center justify-center px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
                                         >
@@ -277,26 +278,6 @@ export default function Sidebar() {
                             </p>
                         )}
                     </div>
-                </div>
-
-                {/* Community Voices Section - Independent */}
-                <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                            Community
-                        </h3>
-                    </div>
-                    <Link
-                        href="/voice/community"
-                        onClick={closeSidebar}
-                        className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-                            pathname === '/voice/community'
-                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium'
-                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
-                        }`}
-                    >
-                        Browse Community Voices
-                    </Link>
                 </div>
 
                 {/* User actions for mobile */}

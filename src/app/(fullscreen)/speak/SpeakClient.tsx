@@ -330,12 +330,12 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
     const urlVoiceId = searchParams.get('voice');
 
     return (
-        <div className="h-[calc(100vh-60px)] flex flex-col">
+        <div className="h-[calc(100vh-72px)] flex flex-col">
             {/* Hidden audio element for auto-play */}
             <audio ref={audioRef} preload="none" />
 
             {/* Session Header - Reduced padding */}
-            <div className="px-3 py-1 bg-gray-50 dark:bg-gray-900 rounded text-center flex-shrink-0">
+            <div className="px-5 py-1 rounded text-center flex-shrink-0">
                 <h2 className="text-sm font-medium text-gray-900 dark:text-white">
                     {mode === 'new' ? (
                         <span className="flex items-center justify-center gap-2">

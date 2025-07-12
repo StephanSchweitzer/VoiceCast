@@ -97,25 +97,27 @@ export default function RecentSessionsClient({ userId }: RecentSessionsClientPro
     };
 
     return (
-        <div className="space-y-6">
-            {/* Search */}
-            <SessionsSearch
-                value={searchQuery}
-                onChange={handleSearch}
-                placeholder="Search sessions and conversations..."
-            />
+        <div className="overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 shadow">
+            <div className="px-4 py-5 sm:p-6 space-y-6">
+                {/* Search */}
+                <SessionsSearch
+                    value={searchQuery}
+                    onChange={handleSearch}
+                    placeholder="Search sessions..."
+                />
 
-            {/* Sessions List */}
-            <SessionsList
-                sessions={sessions}
-                loading={loading}
-                loadingMore={loadingMore}
-                hasMore={hasMore}
-                error={error}
-                onLoadMore={handleLoadMore}
-                onRetry={handleRetry}
-                searchQuery={debouncedQuery}
-            />
+                {/* Sessions List */}
+                <SessionsList
+                    sessions={sessions}
+                    loading={loading}
+                    loadingMore={loadingMore}
+                    hasMore={hasMore}
+                    error={error}
+                    onLoadMore={handleLoadMore}
+                    onRetry={handleRetry}
+                    searchQuery={debouncedQuery}
+                />
+            </div>
         </div>
     );
 }

@@ -41,7 +41,7 @@ export default function SessionsList({
     // Error state
     if (error) {
         return (
-            <Card className="bg-gray-100 dark:bg-gray-800 border-red-200 dark:border-red-800">
+            <Card className="bg-white dark:bg-gray-900 border border-red-200 dark:border-red-800">
                 <CardContent className="p-6">
                     <Alert variant="destructive" className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
                         <AlertCircle className="h-4 w-4" />
@@ -65,7 +65,7 @@ export default function SessionsList({
     // Empty state
     if (sessions.length === 0) {
         return (
-            <Card className="bg-gray-100 dark:bg-gray-800">
+            <Card className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
                 <CardContent className="text-center py-12">
                     <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">

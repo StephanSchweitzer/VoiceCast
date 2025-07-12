@@ -37,7 +37,7 @@ export default function SessionItem({ session, searchQuery }: SessionItemProps) 
 
     return (
         <Link href={`/speak/session/${session.id}`} className="block">
-            <Card className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 hover:shadow-md transition-all cursor-pointer">
+            <Card className="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-md transition-all cursor-pointer border border-gray-200 dark:border-gray-700">
                 <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
