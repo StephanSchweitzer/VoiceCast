@@ -329,15 +329,13 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
     const selectedVoice = allVoices.find(voice => voice.id === selectedVoiceId);
     const urlVoiceId = searchParams.get('voice');
 
-    // Replace the main container div (around line 242) with this:
-
     return (
-        <div className="-mt-4 h-[calc(100vh-80px)] flex flex-col space-y-1">
+        <div className="h-[calc(100vh-60px)] flex flex-col">
             {/* Hidden audio element for auto-play */}
             <audio ref={audioRef} preload="none" />
 
-            {/* Session Header */}
-            <div className="px-3 py-1 bg-gray-50 dark:bg-gray-900 rounded text-center">
+            {/* Session Header - Reduced padding */}
+            <div className="px-3 py-1 bg-gray-50 dark:bg-gray-900 rounded text-center flex-shrink-0">
                 <h2 className="text-sm font-medium text-gray-900 dark:text-white">
                     {mode === 'new' ? (
                         <span className="flex items-center justify-center gap-2">
@@ -354,7 +352,7 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
             </div>
 
             {/* Voice Selection */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 mt-2">
                 <VoiceSelection
                     userVoices={userVoices}
                     savedVoices={savedVoices}
@@ -363,11 +361,11 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
                 />
             </div>
 
-            {/* Generated Audio List - Now gets more space */}
-            <div className="flex-1 min-h-0 bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden">
+            {/* Generated Audio List - Reduced spacing */}
+            <div className="flex-1 min-h-0 rounded-lg overflow-hidden mt-2">
                 {mode === 'new' && generatedAudios.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-8">
-                        <MessageSquarePlus className="h-12 w-12 text-gray-400 mb-4" />
+                    <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                        <MessageSquarePlus className="h-10 w-10 text-gray-400 mb-3" />
                         <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                             {urlVoiceId && selectedVoice ?
                                 `Start Speaking with ${selectedVoice.name}` :
@@ -392,8 +390,8 @@ export default function SpeakClient({ userId, mode, sessionId }: SpeakClientProp
                 )}
             </div>
 
-            {/* Text Input - Stays exactly the same */}
-            <div className="flex-shrink-0">
+            {/* Text Input */}
+            <div className="flex-shrink-0 mt-2">
                 <TextInput
                     selectedVoiceId={selectedVoiceId}
                     onGenerate={handleGenerate}

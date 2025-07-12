@@ -109,10 +109,10 @@ export default function GeneratedAudioList({
 
     if (audios.length === 0) {
         return (
-            <div className="h-full flex flex-col items-center justify-center space-y-4 text-center p-8">
-                <Volume2 className="h-12 w-12 text-gray-400"/>
+            <div className="h-full flex flex-col items-center justify-center space-y-3 text-center p-4">
+                <Volume2 className="h-8 w-8 text-gray-400"/>
                 <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
                         Start Your Conversation
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -126,17 +126,16 @@ export default function GeneratedAudioList({
     // Reverse the order to show newest at bottom (like messaging)
     const reversedAudios = [...audios].reverse();
 
-    // Updated GeneratedAudioList component return statement
     return (
         <div className="h-full flex flex-col">
             <div
                 ref={scrollContainerRef}
-                className="flex-1 overflow-y-auto space-y-3 p-4"
-                style={{paddingBottom: '1rem'}} // Ensure some bottom padding but not excessive
+                className="flex-1 overflow-y-auto space-y-2 p-2"
+                style={{paddingBottom: '0.25rem'}}
             >
                 {/* Load More Button at top */}
                 {hasMore && (
-                    <div className="flex justify-center pb-4">
+                    <div className="flex justify-center pb-2">
                         <Button
                             variant="outline"
                             size="sm"
@@ -164,13 +163,13 @@ export default function GeneratedAudioList({
                     return (
                         <Card key={audio.id}
                               className={`w-full border ${emotionBgClass} shadow-sm hover:shadow-md transition-shadow duration-200`}>
-                            <CardContent className="p-4">
-                                <div className="flex justify-between gap-4">
+                            <CardContent className="p-2">
+                                <div className="flex justify-between gap-3">
                                     {/* Left side - Content */}
                                     <div className="flex-1 min-w-0">
                                         {/* Emotion indicator bar and text */}
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className={`w-1 h-6 ${emotionColorClass} rounded-full`}></div>
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <div className={`w-1 h-4 ${emotionColorClass} rounded-full`}></div>
                                             <div className="flex-1">
                                                 <p className="text-sm font-medium text-gray-900 dark:text-white mb-1 line-clamp-2">
                                                     "{audio.text}"
@@ -180,7 +179,7 @@ export default function GeneratedAudioList({
                                                     <span className="font-medium">{audio.voice.name}</span>
                                                     <span>•</span>
                                                     <span
-                                                        className={`px-2 py-1 rounded text-white ${emotionColorClass} capitalize`}>
+                                                        className={`px-1.5 py-0.5 rounded text-white ${emotionColorClass} capitalize`}>
                                                     {audio.emotion}
                                                 </span>
                                                     <span>•</span>
@@ -196,7 +195,7 @@ export default function GeneratedAudioList({
 
                                         {/* Audio Player */}
                                         <div
-                                            className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                                            className="bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700">
                                             <VoicePlayer audioUrl={audio.filePath}/>
                                         </div>
                                     </div>
@@ -207,35 +206,35 @@ export default function GeneratedAudioList({
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => updateLikeStatus(audio.id, audio.isLiked === true ? null : true)}
-                                            className={`h-8 w-8 p-0 ${
+                                            className={`h-7 w-7 p-0 ${
                                                 audio.isLiked === true
                                                     ? 'text-green-600 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400'
                                                     : 'text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
                                             }`}
                                         >
-                                            <ThumbsUp className="h-4 w-4"/>
+                                            <ThumbsUp className="h-3.5 w-3.5"/>
                                         </Button>
 
                                         <Button
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => updateLikeStatus(audio.id, audio.isLiked === false ? null : false)}
-                                            className={`h-8 w-8 p-0 ${
+                                            className={`h-7 w-7 p-0 ${
                                                 audio.isLiked === false
                                                     ? 'text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400'
                                                     : 'text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20'
                                             }`}
                                         >
-                                            <ThumbsDown className="h-4 w-4"/>
+                                            <ThumbsDown className="h-3.5 w-3.5"/>
                                         </Button>
 
                                         <Button
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => deleteAudio(audio.id)}
-                                            className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                            className="h-7 w-7 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                                         >
-                                            <Trash2 className="h-4 w-4"/>
+                                            <Trash2 className="h-3.5 w-3.5"/>
                                         </Button>
                                     </div>
                                 </div>
@@ -244,7 +243,7 @@ export default function GeneratedAudioList({
                     );
                 })}
 
-                {/* Auto-scroll anchor - removed extra spacing */}
+                {/* Auto-scroll anchor */}
                 <div ref={bottomRef}/>
             </div>
         </div>

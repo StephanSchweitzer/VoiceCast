@@ -12,70 +12,17 @@ export default function Navbar() {
 
     return (
         <>
-            {/* Admin Navigation Bar - Hidden on mobile, full bar on desktop */}
-            {userIsAdmin && (
-                <>
-                    {/* Desktop Admin Bar */}
-                    <div className="hidden md:block bg-blue-600 dark:bg-blue-700 text-white fixed top-0 left-0 right-0 z-50">
-                        <div className="mx-auto px-4">
-                            <div className="flex items-center justify-between h-10">
-                                <div className="flex items-center space-x-4">
-                                    <span className="text-xs font-medium">Admin Panel:</span>
-                                    <Link
-                                        href="/admin"
-                                        className="text-xs hover:text-blue-200 transition-colors"
-                                    >
-                                        Dashboard
-                                    </Link>
-                                    <Link
-                                        href="/admin/genres"
-                                        className="text-xs hover:text-blue-200 transition-colors"
-                                    >
-                                        Manage Genres
-                                    </Link>
-                                </div>
-                                <div className="text-xs text-blue-200">
-                                    Admin Mode: {session?.user?.name || session?.user?.email}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Mobile Admin Indicator - Thin line */}
-                    <div className="md:hidden bg-blue-600 dark:bg-blue-700 text-white fixed top-0 left-0 right-0 z-50">
-                        <div className="flex items-center justify-center h-6">
-                            <Link
-                                href="/admin"
-                                className="text-xs font-medium hover:text-blue-200 transition-colors"
-                            >
-                                ⚡ Admin Mode
-                            </Link>
-                        </div>
-                    </div>
-                </>
-            )}
-
             {/* Main Navigation Bar */}
-            <nav className={`bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 fixed left-0 right-0 z-40 ${
-                userIsAdmin
-                    ? 'top-10 md:top-10 top-6' // Different heights for mobile vs desktop when admin
-                    : 'top-0'
-            }`}>
+            <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 fixed top-0 left-0 right-0 z-40">
                 <div className="mx-auto px-4">
                     <div className="flex md:grid md:grid-cols-3 items-center justify-between md:justify-normal h-16">
                         <div className="flex items-center md:justify-start">
-                            <SidebarToggle />
-                            <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white ml-3">
+                            <div className="-ml-1 md:ml-0">
+                                <SidebarToggle />
+                            </div>
+                            <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white ml-2 md:ml-3">
                                 Voicecast
                             </Link>
-                            {/* Mobile Admin Badge */}
-                            {userIsAdmin && (
-                                <div className="md:hidden ml-3">
-                                    <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-full">
-                                        Admin
-                                    </span>
-                                </div>
-                            )}
                         </div>
 
                         {/* Center section - truly centered */}
@@ -132,11 +79,6 @@ export default function Navbar() {
                                         <span className="text-gray-600 dark:text-gray-300 text-sm">
                                             {session.user.name || session.user.email}
                                         </span>
-                                        {userIsAdmin && (
-                                            <span className="ml-2 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-full">
-                                                Admin
-                                            </span>
-                                        )}
                                     </div>
                                     <button
                                         onClick={() => signOut()}
@@ -146,20 +88,12 @@ export default function Navbar() {
                                     </button>
                                 </div>
                             ) : (
-                                <div className="flex space-x-2">
-                                    <Link
-                                        href="/auth/login"
-                                        className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                                    >
-                                        Sign in
-                                    </Link>
-                                    <Link
-                                        href="/auth/register"
-                                        className="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
-                                    >
-                                        Sign up
-                                    </Link>
-                                </div>
+                                <Link
+                                    href="/auth/login"
+                                    className="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                                >
+                                    Sign in
+                                </Link>
                             )}
                         </div>
                     </div>

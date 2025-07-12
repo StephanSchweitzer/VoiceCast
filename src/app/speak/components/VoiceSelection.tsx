@@ -70,8 +70,8 @@ export default function VoiceSelection({
 
     if (allVoicesEmpty) {
         return (
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 text-center">
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
+            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-2 sm:p-3 border border-gray-200 dark:border-gray-700 text-center">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-2 sm:mb-3">
                     You don't have any voices yet. Create or save some voices to get started.
                 </p>
                 <Button asChild variant="outline" size="sm">
@@ -93,7 +93,7 @@ export default function VoiceSelection({
                         variant="ghost"
                         role="combobox"
                         aria-expanded={isOpen}
-                        className="w-full h-auto p-3 justify-between bg-transparent hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg border-0 shadow-none cursor-pointer active:bg-gray-200 dark:active:bg-gray-700"
+                        className="w-full h-auto p-2 sm:p-3 justify-between bg-transparent hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg border-0 shadow-none cursor-pointer active:bg-gray-200 dark:active:bg-gray-700"
                         style={{ cursor: 'pointer' }}
                     >
                         <div className="flex-1 text-left">
@@ -145,7 +145,7 @@ export default function VoiceSelection({
                     }}
                 >
                     {/* Header with stats - only shown when open */}
-                    <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900">
+                    <div className="px-2 py-1 sm:px-3 sm:py-2 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900">
                         <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
                             <span className="font-medium">Select Voice</span>
                             <div className="flex items-center space-x-3">
@@ -167,7 +167,7 @@ export default function VoiceSelection({
                     >
                         <CommandInput
                             placeholder="Search voices by name, genre, or description..."
-                            className="h-9 bg-white dark:bg-gray-800 border-none outline-none ring-0 focus:ring-0 focus:outline-none focus:border-none shadow-none"
+                            className="h-8 sm:h-9 bg-white dark:bg-gray-800 border-none outline-none ring-0 focus:ring-0 focus:outline-none focus:border-none shadow-none"
                             autoFocus={false}
                         />
                         <CommandList className="max-h-[200px] bg-white dark:bg-gray-800 border-t-0 [&_[cmdk-list]]:border-t-0 overscroll-contain">

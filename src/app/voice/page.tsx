@@ -12,7 +12,7 @@ export default async function VoicesPage() {
 
     return (
         <div className="w-full h-full">
-            <div className="w-full max-w-6xl mx-auto p-6">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                         Your Voice Library

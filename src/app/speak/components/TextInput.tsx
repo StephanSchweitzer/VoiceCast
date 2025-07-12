@@ -62,9 +62,9 @@ export default function TextInput({ selectedVoiceId, onGenerate, disabled, place
 
     return (
         <Card className="p-0 bg-gray-100 dark:bg-gray-800">
-            <CardContent className="space-y-2 p-3">
+            <CardContent className="space-y-1 sm:space-y-2 p-2 sm:p-3">
                 {/* Emotion Selection - Compact horizontal layout */}
-                <div className="grid grid-cols-6 gap-2">
+                <div className="grid grid-cols-6 gap-1 sm:gap-2">
                     {EMOTIONS.map((emotion) => {
                         const isSelected = selectedEmotion === emotion.name;
                         return (
@@ -75,7 +75,7 @@ export default function TextInput({ selectedVoiceId, onGenerate, disabled, place
                                 title={emotion.label}
                                 onMouseDown={(e) => e.preventDefault()}
                                 className={`
-                                    flex items-center justify-center h-8 px-2 
+                                    flex items-center justify-center h-7 sm:h-8 px-1 sm:px-2 
                                     transition-all duration-200 ease-in-out 
                                     focus:outline-none focus:ring-0 focus:border-transparent
                                     border rounded-md font-medium text-base
@@ -108,7 +108,7 @@ export default function TextInput({ selectedVoiceId, onGenerate, disabled, place
                 />
 
                 {generationError && (
-                    <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                    <div className="p-2 sm:p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
                         <div className="flex items-center gap-2">
                             <AlertCircle className="h-4 w-4 text-red-500" />
                             <span className="text-sm text-red-700 dark:text-red-300">{generationError}</span>
@@ -117,24 +117,26 @@ export default function TextInput({ selectedVoiceId, onGenerate, disabled, place
                 )}
 
                 {/* Bottom Row - Character count and Generate Button */}
-                <div className="flex justify-between items-center gap-3">
+                <div className="flex justify-between items-center gap-2 sm:gap-3">
                     <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
                         {text.length}/300
                     </span>
                     <Button
                         onClick={handleGenerate}
                         disabled={!text.trim() || !selectedVoiceId || isGenerating || disabled}
-                        className="flex-1 h-9 text-sm font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 hover:border-blue-700 shadow-sm disabled:bg-gray-400 disabled:border-gray-400 disabled:text-white disabled:cursor-not-allowed"
+                        className="flex-1 h-8 sm:h-9 text-sm font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 hover:border-blue-700 shadow-sm disabled:bg-gray-400 disabled:border-gray-400 disabled:text-white disabled:cursor-not-allowed"
                     >
                         {isGenerating ? (
                             <div className="flex items-center gap-2">
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                Generating...
+                                <span className="hidden sm:inline">Generating...</span>
+                                <span className="sm:hidden">...</span>
                             </div>
                         ) : (
                             <div className="flex items-center gap-2">
                                 <Volume2 className="h-4 w-4" />
-                                Generate Speech
+                                <span className="hidden sm:inline">Generate Speech</span>
+                                <span className="sm:hidden">Generate</span>
                             </div>
                         )}
                     </Button>
