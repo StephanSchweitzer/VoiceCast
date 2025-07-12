@@ -276,7 +276,7 @@ export default function VoiceViewClient({ voiceId, userId }: VoiceViewClientProp
     const isOwner = voice ? voice.userId === userId : false;
 
     return (
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-6xl sm:px-6 lg:px-8">
             {loading && (
                 <div>
                     <div className="flex items-center justify-center mb-6">

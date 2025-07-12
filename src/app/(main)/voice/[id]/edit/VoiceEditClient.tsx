@@ -176,7 +176,7 @@ export default function VoiceEditClient({ voiceId }: VoiceEditClientProps) {
     }, [voiceId, loadData]);
 
     return (
-        <div className="mx-auto max-w-3xl px-4">
+        <div className="mx-auto max-w-6xl sm:px-6 lg:px-8">
             <div className="mb-6">
                 <Button variant="ghost" asChild className="mb-4">
                     <Link href={`/voice/${voiceId}`} className="flex items-center gap-2">
