@@ -8,3 +8,5 @@ next-env.d.ts
 public/uploads
 git-filter-repo
 public/generated-audios/
+terraform/terraform.tfvars
+terraform/.terraform/

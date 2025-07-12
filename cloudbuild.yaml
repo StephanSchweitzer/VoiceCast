@@ -1,0 +1,78 @@
+# cloudbuild.yaml - Place this file in your repository root
+# Optimized for fast app deployments with path-based triggering
+
+steps:
+  # Step 0: Log what triggered this build
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🚀 Starting VoiceCast app deployment..."
+        echo "Build ID: $BUILD_ID"
+        echo "Branch: $BRANCH_NAME"
+        echo "Commit: $COMMIT_SHA"
+        echo "Triggered by: App file changes (fast deployment)"
+
+  # Step 1: Build the Docker image using your existing Dockerfile
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', '${_IMAGE_URL}:latest',
+      '-t', '${_IMAGE_URL}:${BUILD_ID}',
+      '.'
+    ]
+
+  # Step 2: Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_IMAGE_URL}:latest']
+
+  # Step 3: Push the tagged version as well
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_IMAGE_URL}:${BUILD_ID}']
+
+  # Step 4: Deploy to Cloud Run (optional - forces immediate deployment)
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: [
+      'run', 'deploy', 'voicecast-app',
+      '--image', '${_IMAGE_URL}:latest',
+      '--region', '${_REGION}',
+      '--platform', 'managed',
+      '--quiet'
+    ]
+
+  # Step 5: Success notification
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "✅ VoiceCast app deployment completed successfully!"
+        echo "🌐 Your app is now live with the latest changes"
+        echo "📦 Image: ${_IMAGE_URL}:latest"
+
+# Build options
+options:
+  # Use a larger machine for faster builds
+  machineType: 'E2_HIGHCPU_8'
+
+  # Disk size for the build
+  diskSizeGb: 50
+
+  # Enhanced logging for debugging
+  logging: 'CLOUD_LOGGING_ONLY'
+
+# Timeout for the entire build (shorter since no model training)
+timeout: '600s'  # 10 minutes - much faster without models
+
+# Substitutions (these come from Terraform)
+substitutions:
+  _IMAGE_URL: 'europe-west1-docker.pkg.dev/voicecast-464815/voicecast/voicecast-app'
+  _REGION: 'europe-west1'
+
+# Tags for organizing builds
+tags:
+  - 'voicecast'
+  - 'nextjs'
+  - 'app-deployment'
+  - 'fast-deploy'
