@@ -7,7 +7,8 @@ WORKDIR /app
 
 COPY package*.json ./
 COPY prisma ./prisma
-RUN npm ci
+# RUN npm ci
+RUN npm install
 
 FROM base AS builder
 WORKDIR /app
