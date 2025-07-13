@@ -46,7 +46,7 @@ resource "google_storage_bucket" "generated_audios" {
 }
 
 resource "google_storage_bucket" "training_datasets" {
-  name          = "${var.project_id}-${var.app_name}-datasets"
+  name          = "${var.project_id}-${var.app_name}-training-datasets"  # Fixed: was "datasets", now "training-datasets" for consistency
   location      = var.region
   force_destroy = true
 
@@ -62,7 +62,7 @@ resource "google_storage_bucket" "training_datasets" {
 resource "google_storage_bucket" "terraform_state" {
   name          = "${var.project_id}-terraform-state"
   location      = var.region
-  force_destroy = false
+  force_destroy = true
 
   uniform_bucket_level_access = true
 

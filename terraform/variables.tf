@@ -7,7 +7,7 @@ variable "project_id" {
 variable "region" {
   description = "GCP Region"
   type        = string
-  default     = "europe-west9"
+  default     = "europe-west1"
 }
 
 variable "db_password" {
@@ -95,4 +95,15 @@ variable "ignored_file_patterns" {
     ".env.example",
     "**/.DS_Store",
   ]
+}
+
+variable "github_personal_access_token" {
+  description = "GitHub Personal Access Token"
+  type        = string
+  sensitive   = true
+}
+
+variable "github_app_installation_id" {
+  description = "GitHub App Installation ID"
+  type        = number
 }

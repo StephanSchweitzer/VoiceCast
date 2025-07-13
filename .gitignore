@@ -1,6 +1,5 @@
 .idea/
 node_modules/
-package-lock.json
 .env
 VoiceCast.iml
 .next/
@@ -10,3 +9,5 @@ git-filter-repo
 public/generated-audios/
 terraform/terraform.tfvars
 terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup

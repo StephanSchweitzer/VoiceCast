@@ -51,8 +51,8 @@ options:
 timeout: '600s'
 
 substitutions:
-  _IMAGE_URL: 'europe-west9-docker.pkg.dev/voicecast-464815/voicecast/voicecast-app'
-  _REGION: 'europe-west9'
+  _IMAGE_URL: 'europe-west1-docker.pkg.dev/voicecast-464815/voicecast/voicecast-app'
+  _REGION: 'europe-west1'
 
 tags:
   - 'voicecast'

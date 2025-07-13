@@ -16,8 +16,10 @@ resource "google_compute_network" "voicecast_vpc" {
 resource "google_vpc_access_connector" "voicecast_connector" {
   name          = "${var.app_name}-connector"
   region        = var.region
-  ip_cidr_range = "10.8.0.0/28"
+  ip_cidr_range = "10.9.0.0/28"  # Changed from 10.8.0.0/28 to avoid conflict
   network       = google_compute_network.voicecast_vpc.name
+  min_instances = 2
+  max_instances = 10
 
   depends_on = [google_project_service.apis]
 }
@@ -46,6 +48,11 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
         container_port = 3000
       }
 
+      volume_mounts {
+        name       = "cloudsql"
+        mount_path = "/cloudsql"
+      }
+
       resources {
         limits = {
           cpu    = "2"
@@ -56,7 +63,12 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
 
       env {
         name  = "DATABASE_URL"
-        value = "postgresql://${google_sql_user.voicecast_user.name}@/${google_sql_database.voicecast_database.name}?host=/cloudsql/${google_sql_database_instance.voicecast_db.connection_name}"
+        value = "postgresql://${google_sql_user.voicecast_user.name}:${var.db_password}@localhost/${google_sql_database.voicecast_database.name}?host=/cloudsql/${google_sql_database_instance.voicecast_db.connection_name}"
+      }
+
+      env {
+        name  = "DIRECT_URL"
+        value = "postgresql://${google_sql_user.voicecast_user.name}:${var.db_password}@localhost/${google_sql_database.voicecast_database.name}?host=/cloudsql/${google_sql_database_instance.voicecast_db.connection_name}"
       }
 
       env {
@@ -81,7 +93,7 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
 
       env {
         name  = "NEXTAUTH_URL"
-        value = google_cloud_run_v2_service.voicecast_app.uri
+        value = "https://projetannuel.com"
       }
 
       env {
@@ -114,6 +126,13 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
         value = var.project_id
       }
     }
+
+    volumes {
+      name = "cloudsql"
+      cloud_sql_instance {
+        instances = [google_sql_database_instance.voicecast_db.connection_name]
+      }
+    }
   }
 
   depends_on = [
@@ -121,4 +140,21 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
     google_sql_database_instance.voicecast_db,
     google_vpc_access_connector.voicecast_connector
   ]
+
+  deletion_protection = false
+}
+
+resource "google_cloud_run_domain_mapping" "domain" {
+  location = var.region
+  name     = "projetannuel.com"
+
+  metadata {
+    namespace = var.project_id
+  }
+
+  spec {
+    route_name = google_cloud_run_v2_service.voicecast_app.name
+  }
+
+  depends_on = [google_cloud_run_v2_service.voicecast_app]
 }

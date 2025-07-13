@@ -1,5 +1,5 @@
 project_id = "voicecast-464815"
-region     = "europe-west9"
+region     = "europe-west1"
 app_name   = "voicecast"
 
 db_password     = "your-secure-database-password-here"

@@ -15,14 +15,14 @@ provider "google" {
 
 resource "google_project_service" "apis" {
   for_each = toset([
-    "cloudsql.googleapis.com",
+    "sqladmin.googleapis.com",
     "run.googleapis.com",
     "vpcaccess.googleapis.com",
     "artifactregistry.googleapis.com",
     "secretmanager.googleapis.com",
     "storage.googleapis.com",
     "cloudbuild.googleapis.com",
-    "sourcerepo.googleapis.com"
+    "iamcredentials.googleapis.com"
   ])
 
   project = var.project_id
@@ -59,17 +59,4 @@ resource "google_secret_manager_secret" "nextauth_secret" {
 resource "google_secret_manager_secret_version" "nextauth_secret" {
   secret      = google_secret_manager_secret.nextauth_secret.id
   secret_data = var.nextauth_secret
-}
-
-resource "local_file" "backend_config" {
-  filename = "${path.module}/backend.tf"
-  content = <<-EOT
-terraform {
-  backend "gcs" {
-    bucket = "${google_storage_bucket.terraform_state.name}"
-    prefix = "voicecast/state"
-  }
-}
-EOT
-  depends_on = [google_storage_bucket.terraform_state]
 }
