@@ -1,6 +1,3 @@
-# compute.tf - Cloud Run service configuration
-
-# Artifact Registry for container images
 resource "google_artifact_registry_repository" "voicecast_repo" {
   location      = var.region
   repository_id = var.app_name
@@ -10,14 +7,12 @@ resource "google_artifact_registry_repository" "voicecast_repo" {
   depends_on = [google_project_service.apis]
 }
 
-# VPC Network for private communication
 resource "google_compute_network" "voicecast_vpc" {
   name                    = "${var.app_name}-network"
   auto_create_subnetworks = true
   depends_on              = [google_project_service.apis]
 }
 
-# VPC Connector for Cloud Run to access Cloud SQL
 resource "google_vpc_access_connector" "voicecast_connector" {
   name          = "${var.app_name}-connector"
   region        = var.region
@@ -27,7 +22,6 @@ resource "google_vpc_access_connector" "voicecast_connector" {
   depends_on = [google_project_service.apis]
 }
 
-# Cloud Run service
 resource "google_cloud_run_v2_service" "voicecast_app" {
   name     = "${var.app_name}-app"
   location = var.region
@@ -60,7 +54,6 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
         cpu_idle = true
       }
 
-      # Database connection via Cloud SQL Proxy
       env {
         name  = "DATABASE_URL"
         value = "postgresql://${google_sql_user.voicecast_user.name}@/${google_sql_database.voicecast_database.name}?host=/cloudsql/${google_sql_database_instance.voicecast_db.connection_name}"
@@ -76,7 +69,6 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
         }
       }
 
-      # NextAuth configuration
       env {
         name = "NEXTAUTH_SECRET"
         value_source {
@@ -92,7 +84,6 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
         value = google_cloud_run_v2_service.voicecast_app.uri
       }
 
-      # Storage bucket configurations
       env {
         name  = "REFERENCE_AUDIO_BUCKET"
         value = google_storage_bucket.reference_audios.name
@@ -108,7 +99,6 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
         value = google_storage_bucket.training_datasets.name
       }
 
-      # App configuration
       env {
         name  = "NODE_ENV"
         value = "production"

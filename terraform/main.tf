@@ -1,5 +1,3 @@
-# main.tf - Core Terraform configuration with Cloud Build
-
 terraform {
   required_version = ">= 1.0"
   required_providers {
@@ -9,20 +7,17 @@ terraform {
     }
   }
 
-  # Uncomment this for team collaboration
-  # backend "gcs" {
-  #   bucket = "your-terraform-state-bucket"
-  #   prefix = "voicecast/state"
-  # }
+  backend "gcs" {
+    bucket = "${var.project_id}-terraform-state"  # Match your bucket name
+    prefix = "voicecast/state"
+  }
 }
 
-# Configure the Google Cloud Provider
 provider "google" {
   project = var.project_id
   region  = var.region
 }
 
-# Enable required APIs
 resource "google_project_service" "apis" {
   for_each = toset([
     "cloudsql.googleapis.com",
@@ -41,7 +36,6 @@ resource "google_project_service" "apis" {
   disable_on_destroy = false
 }
 
-# Secrets for sensitive data
 resource "google_secret_manager_secret" "db_password" {
   secret_id = "${var.app_name}-db-password"
 

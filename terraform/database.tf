@@ -1,13 +1,10 @@
-# database.tf - Cloud SQL PostgreSQL configuration
-
-# Cloud SQL instance
 resource "google_sql_database_instance" "voicecast_db" {
   name             = "${var.app_name}-postgres"
   database_version = "POSTGRES_15"
   region           = var.region
 
   settings {
-    tier = "db-g1-small" # Reliable tier for development
+    tier = "db-g1-small"
 
     backup_configuration {
       enabled                        = true
@@ -18,8 +15,8 @@ resource "google_sql_database_instance" "voicecast_db" {
     }
 
     ip_configuration {
-      ipv4_enabled = true # Simplified for school project
-      # For production, you'd want private networking:
+      ipv4_enabled = true
+      # If we have time for private networking:
       # ipv4_enabled    = false
       # private_network = google_compute_network.voicecast_vpc.id
     }
@@ -36,18 +33,16 @@ resource "google_sql_database_instance" "voicecast_db" {
     }
   }
 
-  deletion_protection = false # Easier cleanup for school project
+  deletion_protection = false
 
   depends_on = [google_project_service.apis]
 }
 
-# Database
 resource "google_sql_database" "voicecast_database" {
   name     = var.app_name
   instance = google_sql_database_instance.voicecast_db.name
 }
 
-# Database user
 resource "google_sql_user" "voicecast_user" {
   name     = var.app_name
   instance = google_sql_database_instance.voicecast_db.name

@@ -28,7 +28,6 @@ variable "app_name" {
   default     = "voicecast"
 }
 
-# Git repository configuration for Cloud Build
 variable "github_repo_owner" {
   description = "GitHub repository owner (username or organization)"
   type        = string

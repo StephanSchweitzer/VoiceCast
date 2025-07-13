@@ -31,14 +31,12 @@ resource "google_cloudbuild_trigger" "voicecast_build" {
   ]
 }
 
-# Service account for Cloud Build
 resource "google_service_account" "cloudbuild_sa" {
   account_id   = "${var.app_name}-cloudbuild"
   display_name = "VoiceCast Cloud Build Service Account"
   description  = "Service account for Cloud Build operations"
 }
 
-# Grant Cloud Build necessary permissions
 resource "google_project_iam_member" "cloudbuild_builder" {
   project = var.project_id
   role    = "roles/cloudbuild.builds.builder"
@@ -57,10 +55,8 @@ resource "google_project_iam_member" "cloudbuild_storage" {
   member  = "serviceAccount:${google_service_account.cloudbuild_sa.email}"
 }
 
-# Allow Cloud Build to trigger the build manually via Terraform
 resource "null_resource" "trigger_initial_build" {
   triggers = {
-    # This will trigger the build whenever these values change
     image_url = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.voicecast_repo.name}/${var.app_name}-app:latest"
     trigger_id = google_cloudbuild_trigger.voicecast_build.id
   }
