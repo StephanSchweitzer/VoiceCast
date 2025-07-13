@@ -3,13 +3,8 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 6.8.0"
+      version = "~> 6.43.0"
     }
-  }
-
-  backend "gcs" {
-    bucket = "${var.project_id}-terraform-state"  # Match your bucket name
-    prefix = "voicecast/state"
   }
 }
 
@@ -64,4 +59,17 @@ resource "google_secret_manager_secret" "nextauth_secret" {
 resource "google_secret_manager_secret_version" "nextauth_secret" {
   secret      = google_secret_manager_secret.nextauth_secret.id
   secret_data = var.nextauth_secret
+}
+
+resource "local_file" "backend_config" {
+  filename = "${path.module}/backend.tf"
+  content = <<-EOT
+terraform {
+  backend "gcs" {
+    bucket = "${google_storage_bucket.terraform_state.name}"
+    prefix = "voicecast/state"
+  }
+}
+EOT
+  depends_on = [google_storage_bucket.terraform_state]
 }
