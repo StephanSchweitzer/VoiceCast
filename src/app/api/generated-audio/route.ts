@@ -183,24 +183,23 @@ export async function POST(request: NextRequest) {
         const { arousal, valence } = EMOTION_MAPPINGS[emotion as keyof typeof EMOTION_MAPPINGS];
 
         const audioBuffer = await storageService.readFile(voice.audioSample);
-        const audioSampleData = audioBuffer.toString('base64');
+        const audioBlob = new Blob([audioBuffer], { type: 'audio/wav' });
 
-        // TODO: Replace '/api/tts-mock' with '/api/tts' when ready for production
-        const baseUrl = process.env.K_SERVICE
-            ? `http://localhost:${process.env.PORT || '8080'}`
-            : request.nextUrl.origin;
+        const formData = new FormData();
+        formData.append('text', text);
+        formData.append('valence', valence.toString());
+        formData.append('arousal', arousal.toString());
+        formData.append('reference_audio', audioBlob, 'reference.wav');
 
-        const ttsResponse = await fetch(`${baseUrl}/api/tts-mock`, {
+        const ttsApiUrl = process.env.TTS_API_URL;
+
+        if (!ttsApiUrl) {
+            throw new Error('TTS_API_URL environment variable not configured');
+        }
+
+        const ttsResponse = await fetch(`${ttsApiUrl}/synthesize`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                text,
-                audioReference: audioSampleData,
-                arousal,
-                valence
-            }),
+            body: formData,
         });
 
         const ttsResult = await ttsResponse.json();
