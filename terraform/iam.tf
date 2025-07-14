@@ -72,3 +72,11 @@ resource "google_cloud_run_service_iam_binding" "public_access" {
 
   depends_on = [google_cloud_run_v2_service.voicecast_app]
 }
+
+resource "google_project_iam_member" "service_account_token_creator" {
+  project = var.project_id
+  role    = "roles/iam.serviceAccountTokenCreator"
+  member  = "serviceAccount:${google_service_account.cloud_run_sa.email}"
+
+  depends_on = [google_project_service.apis]
+}
