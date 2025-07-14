@@ -205,10 +205,6 @@ resource "google_cloud_run_v2_service" "voicecast_tts" {
         value = "production"
       }
 
-      env {
-        name  = "PORT"
-        value = "8000"
-      }
     }
   }
 
