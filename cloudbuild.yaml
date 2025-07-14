@@ -26,7 +26,7 @@ steps:
           echo "BUILD_NEXTJS=false" >> /workspace/build_flags.txt
         fi
 
-  - name: 'gcr.io/cloud-builders/bash'
+  - name: 'ubuntu'
     entrypoint: 'bash'
     args:
       - '-c'
@@ -39,7 +39,7 @@ steps:
           echo "BUILD_TTS=false" >> /workspace/build_flags.txt
         fi
 
-  - name: 'gcr.io/cloud-builders/bash'
+  - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
       - '-c'

@@ -190,9 +190,9 @@ resource "google_cloud_run_v2_service" "voicecast_tts" {
           port = 8000
         }
         initial_delay_seconds = 60
-        timeout_seconds       = 30
-        period_seconds        = 10
-        failure_threshold     = 30
+        timeout_seconds = 5
+        period_seconds = 10
+        failure_threshold = 30
       }
 
       env {
