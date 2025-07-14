@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { storageService } from '@/lib/storage';
 
 export async function POST(request: NextRequest) {
     try {
@@ -20,46 +18,51 @@ export async function POST(request: NextRequest) {
         // Simulate processing time for voice cloning
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // Path to the mock audio file that will be returned
-        const mockAudioPath = join(process.cwd(), 'public', 'test-audio', 'sample.wav');
+        const mockAudioGSPath = `gs://${process.env.GENERATED_AUDIO_BUCKET}/mock-files-sample.wav`;
+        try {
+            const audioBuffer = await storageService.readFile(mockAudioGSPath);
 
-        // Check if the mock audio file exists
-        if (!existsSync(mockAudioPath)) {
-            console.error('Mock audio file not found at:', mockAudioPath);
+            const timestamp = Date.now();
+            const filename = `mock-generated-${timestamp}.wav`;
+
+            const savedFilePath = await storageService.uploadGeneratedAudio(audioBuffer, filename);
+
+            const audioBase64 = audioBuffer.toString('base64');
+
+            console.log('Mock TTS Voice Cloning called with:', {
+                text: text?.slice(0, 50) + (text?.length > 50 ? '...' : ''),
+                emotion: `arousal=${arousal}, valence=${valence}`,
+                audioReferenceSize: `${Math.round(Buffer.from(audioReference, 'base64').length / 1024)}KB`,
+                outputAudioSize: `${Math.round(audioBuffer.length / 1024)}KB`,
+                savedToPath: savedFilePath
+            });
+
+            return NextResponse.json({
+                success: true,
+                audioData: audioBase64,
+                filePath: savedFilePath, // This is the gs:// path that your real API will return
+                metadata: {
+                    text,
+                    arousal,
+                    valence,
+                    duration: 2.5, // Mock duration
+                    generatedAt: new Date().toISOString(),
+                    format: 'wav',
+                    encoding: 'base64'
+                }
+            });
+
+        } catch (fileError) {
+            console.error('Mock audio file not found in cloud storage:', fileError);
             return NextResponse.json(
                 {
                     success: false,
-                    error: 'Mock audio file not found. Please add a sample.wav file to public/test-audio/'
+                    error: 'Mock audio file not found in cloud storage. Please upload sample.wav as mock-files-sample.wav to gs://' +
+                        process.env.GENERATED_AUDIO_BUCKET
                 },
                 { status: 500 }
             );
         }
-
-        // Read the mock generated audio file
-        const audioBuffer = await readFile(mockAudioPath);
-        const audioBase64 = audioBuffer.toString('base64');
-
-        // Log what the TTS service received (for debugging)
-        console.log('Mock TTS Voice Cloning called with:', {
-            text: text?.slice(0, 50) + (text?.length > 50 ? '...' : ''),
-            emotion: `arousal=${arousal}, valence=${valence}`,
-            audioReferenceSize: `${Math.round(Buffer.from(audioReference, 'base64').length / 1024)}KB`,
-            outputAudioSize: `${Math.round(audioBuffer.length / 1024)}KB`
-        });
-
-        return NextResponse.json({
-            success: true,
-            audioData: audioBase64,
-            metadata: {
-                text,
-                arousal,
-                valence,
-                duration: 2.5, // Mock duration
-                generatedAt: new Date().toISOString(),
-                format: 'wav',
-                encoding: 'base64'
-            }
-        });
 
     } catch (error) {
         console.error('Mock TTS error:', error);

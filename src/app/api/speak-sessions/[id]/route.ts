@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { storageService } from '@/lib/storage';
 
 // GET /api/speak-sessions/[id] - Get session with generated audios
 export async function GET(
@@ -68,9 +69,41 @@ export async function GET(
         const audios = hasMore ? generatedAudios.slice(0, -1) : generatedAudios;
         const nextCursor = hasMore ? audios[audios.length - 1].id : null;
 
+        // Process URLs for both generated audios and voice samples
+        const processedAudios = await Promise.all(
+            audios.map(async (audio) => {
+                let processedAudio = { ...audio };
+
+                // Process generated audio filePath
+                if (audio.filePath?.startsWith('gs://')) {
+                    try {
+                        processedAudio.filePath = await storageService.getSignedUrl(audio.filePath, 3600);
+                    } catch (error) {
+                        console.error('Error generating signed URL for generated audio:', error);
+                        console.error('Audio ID:', audio.id, 'FilePath:', audio.filePath);
+                    }
+                }
+
+                // Process voice audioSample
+                if (audio.voice?.audioSample?.startsWith('gs://')) {
+                    try {
+                        processedAudio.voice = {
+                            ...audio.voice,
+                            audioSample: await storageService.getSignedUrl(audio.voice.audioSample, 3600)
+                        };
+                    } catch (error) {
+                        console.error('Error generating signed URL for voice audio sample:', error);
+                        console.error('Voice ID:', audio.voice.id, 'AudioSample:', audio.voice.audioSample);
+                    }
+                }
+
+                return processedAudio;
+            })
+        );
+
         return NextResponse.json({
             session: speakSession,
-            audios,
+            audios: processedAudios,
             hasMore,
             nextCursor
         });
@@ -162,7 +195,15 @@ export async function DELETE(
 
     try {
         const speakSession = await prisma.speakSession.findUnique({
-            where: { id }
+            where: { id },
+            include: {
+                generatedAudios: {
+                    select: {
+                        id: true,
+                        filePath: true
+                    }
+                }
+            }
         });
 
         if (!speakSession) {
@@ -178,6 +219,19 @@ export async function DELETE(
                 { status: 403 }
             );
         }
+
+        // Delete audio files from cloud storage
+        const deletePromises = speakSession.generatedAudios
+            .filter(audio => audio.filePath?.startsWith('gs://'))
+            .map(async (audio) => {
+                try {
+                    await storageService.deleteFile(audio.filePath!);
+                } catch (error) {
+                    console.warn('Could not delete audio file:', audio.filePath, error);
+                }
+            });
+
+        await Promise.all(deletePromises);
 
         // Delete the session (cascades to generated audios)
         await prisma.speakSession.delete({

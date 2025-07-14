@@ -57,7 +57,31 @@ export async function PATCH(
             }
         });
 
-        return NextResponse.json(updatedAudio);
+        // Process URLs for response
+        let processedAudio = { ...updatedAudio };
+
+        // Process generated audio filePath
+        if (updatedAudio.filePath?.startsWith('gs://')) {
+            try {
+                processedAudio.filePath = await storageService.getSignedUrl(updatedAudio.filePath, 3600);
+            } catch (error) {
+                console.error('Error generating signed URL for generated audio:', error);
+            }
+        }
+
+        // Process voice audioSample
+        if (updatedAudio.voice?.audioSample?.startsWith('gs://')) {
+            try {
+                processedAudio.voice = {
+                    ...updatedAudio.voice,
+                    audioSample: await storageService.getSignedUrl(updatedAudio.voice.audioSample, 3600)
+                };
+            } catch (error) {
+                console.error('Error generating signed URL for voice audio sample:', error);
+            }
+        }
+
+        return NextResponse.json(processedAudio);
     } catch (error) {
         console.error('Error updating like status:', error);
         return NextResponse.json(
@@ -102,6 +126,7 @@ export async function DELETE(
             where: { id }
         });
 
+        // Delete audio file from cloud storage
         if (generatedAudio.filePath && generatedAudio.filePath.startsWith('gs://')) {
             try {
                 await storageService.deleteFile(generatedAudio.filePath);
