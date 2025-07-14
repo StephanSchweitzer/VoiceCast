@@ -129,7 +129,7 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
 
       env {
         name  = "TTS_API_URL"
-        value = "https://${google_cloud_run_v2_service.voicecast_tts.uri}"
+        value = google_cloud_run_v2_service.voicecast_tts.uri
       }
     }
 

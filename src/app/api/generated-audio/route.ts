@@ -3,6 +3,13 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { storageService} from "@/lib/storage";
+import { GoogleAuth } from 'google-auth-library';
+
+interface TTSApiResponse {
+    success: boolean;
+    audioData?: string;
+    error?: string;
+}
 
 const EMOTION_MAPPINGS = {
     neutral: { arousal: 0.5, valence: 0.5 },
@@ -197,19 +204,26 @@ export async function POST(request: NextRequest) {
             throw new Error('TTS_API_URL environment variable not configured');
         }
 
-        const ttsResponse = await fetch(`${ttsApiUrl}/synthesize`, {
-            method: 'POST',
-            body: formData,
+        // Use Google Auth for service-to-service authentication
+        const auth = new GoogleAuth({
+            scopes: ['https://www.googleapis.com/auth/cloud-platform']
         });
 
-        const ttsResult = await ttsResponse.json();
+        const authClient = await auth.getIdTokenClient(ttsApiUrl);
 
-        if (!ttsResponse.ok) {
-            throw new Error(ttsResult.error || 'Failed to generate speech');
-        }
+        const ttsResponse = await authClient.request({
+            url: `${ttsApiUrl}/synthesize`,
+            method: 'POST',
+            body: formData,
+            headers: {
+                // Don't set Content-Type when using FormData - let the browser set it
+            }
+        });
+
+        const ttsResult = ttsResponse.data as TTSApiResponse;
 
         if (!ttsResult.success || !ttsResult.audioData) {
-            throw new Error('No audio data received from TTS service');
+            throw new Error(ttsResult.error || 'No audio data received from TTS service');
         }
 
         const filename = `${Date.now()}_${Math.random().toString(36).substring(2)}.wav`;
