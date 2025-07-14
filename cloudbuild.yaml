@@ -13,7 +13,7 @@ steps:
         echo "Changed files:"
         cat /workspace/changed_files.txt
 
-  - name: 'gcr.io/cloud-builders/bash'
+  - name: 'ubuntu'
     entrypoint: 'bash'
     args:
       - '-c'
