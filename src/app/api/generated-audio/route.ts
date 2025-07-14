@@ -190,13 +190,28 @@ export async function POST(request: NextRequest) {
         const { arousal, valence } = EMOTION_MAPPINGS[emotion as keyof typeof EMOTION_MAPPINGS];
 
         const audioBuffer = await storageService.readFile(voice.audioSample);
-        const audioBlob = new Blob([audioBuffer], { type: 'audio/wav' });
 
+        // Get the auth token
+        const auth = new GoogleAuth({
+            scopes: ['https://www.googleapis.com/auth/cloud-platform']
+        });
+
+        const authClient = await auth.getClient();
+        const accessToken = await authClient.getAccessToken();
+
+        if (!accessToken || !accessToken.token) {
+            throw new Error('Failed to get access token');
+        }
+
+        // Create FormData with the audio file
         const formData = new FormData();
         formData.append('text', text);
         formData.append('valence', valence.toString());
         formData.append('arousal', arousal.toString());
-        formData.append('reference_audio', audioBlob, 'reference.wav');
+
+        // Create a proper File object from the buffer
+        const audioFile = new File([audioBuffer], 'reference.wav', { type: 'audio/wav' });
+        formData.append('reference_audio', audioFile);
 
         const ttsApiUrl = process.env.TTS_API_URL;
 
@@ -204,23 +219,22 @@ export async function POST(request: NextRequest) {
             throw new Error('TTS_API_URL environment variable not configured');
         }
 
-        // Use Google Auth for service-to-service authentication
-        const auth = new GoogleAuth({
-            scopes: ['https://www.googleapis.com/auth/cloud-platform']
-        });
-
-        const authClient = await auth.getIdTokenClient(ttsApiUrl);
-
-        const ttsResponse = await authClient.request({
-            url: `${ttsApiUrl}/synthesize`,
+        // Use native fetch with the auth token
+        const ttsResponse = await fetch(`${ttsApiUrl}/synthesize`, {
             method: 'POST',
-            body: formData,
             headers: {
-                // Don't set Content-Type when using FormData - let the browser set it
-            }
+                'Authorization': `Bearer ${accessToken.token}`,
+                // Don't set Content-Type - let fetch set it with boundary for multipart
+            },
+            body: formData
         });
 
-        const ttsResult = ttsResponse.data as TTSApiResponse;
+        if (!ttsResponse.ok) {
+            const errorText = await ttsResponse.text();
+            throw new Error(`TTS API error: ${ttsResponse.status} - ${errorText}`);
+        }
+
+        const ttsResult = await ttsResponse.json() as TTSApiResponse;
 
         if (!ttsResult.success || !ttsResult.audioData) {
             throw new Error(ttsResult.error || 'No audio data received from TTS service');
