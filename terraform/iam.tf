@@ -80,3 +80,12 @@ resource "google_project_iam_member" "service_account_token_creator" {
 
   depends_on = [google_project_service.apis]
 }
+
+resource "google_cloud_run_service_iam_member" "tts_invoker" {
+  location = google_cloud_run_v2_service.voicecast_tts.location
+  service  = google_cloud_run_v2_service.voicecast_tts.name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.cloud_run_sa.email}"
+
+  depends_on = [google_project_service.apis]
+}

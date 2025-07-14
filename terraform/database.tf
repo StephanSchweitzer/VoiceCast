@@ -19,6 +19,11 @@ resource "google_sql_database_instance" "voicecast_db" {
       # If we have time for private networking:
       # ipv4_enabled    = false
       # private_network = google_compute_network.voicecast_vpc.id
+
+      authorized_networks {
+        value = "93.19.112.171"
+        name  = "dev-local"
+      }
     }
 
     database_flags {

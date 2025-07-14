@@ -24,6 +24,7 @@ resource "google_vpc_access_connector" "voicecast_connector" {
   depends_on = [google_project_service.apis]
 }
 
+# NextJS App Service
 resource "google_cloud_run_v2_service" "voicecast_app" {
   name     = "${var.app_name}-app"
   location = var.region
@@ -125,6 +126,11 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
         name  = "GCP_PROJECT_ID"
         value = var.project_id
       }
+
+      env {
+        name  = "TTS_API_URL"
+        value = "https://${google_cloud_run_v2_service.voicecast_tts.uri}"
+      }
     }
 
     volumes {
@@ -138,6 +144,76 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
   depends_on = [
     google_project_service.apis,
     google_sql_database_instance.voicecast_db,
+    google_vpc_access_connector.voicecast_connector,
+    google_cloud_run_v2_service.voicecast_tts  # Ensure TTS service exists first
+  ]
+
+  deletion_protection = false
+}
+
+#TTS app service
+resource "google_cloud_run_v2_service" "voicecast_tts" {
+  name     = "${var.app_name}-tts"
+  location = var.region
+
+  template {
+    scaling {
+      min_instance_count = 1
+      max_instance_count = 3
+    }
+
+    vpc_access {
+      connector = google_vpc_access_connector.voicecast_connector.id
+      egress    = "PRIVATE_RANGES_ONLY"
+    }
+
+    service_account = google_service_account.cloud_run_sa.email
+
+    containers {
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.voicecast_repo.name}/${var.app_name}-tts:latest"
+
+      ports {
+        container_port = 8000
+      }
+
+      resources {
+        limits = {
+          cpu    = "4"
+          memory = "8Gi"
+        }
+        cpu_idle = false
+      }
+
+      startup_probe {
+        http_get {
+          path = "/health"
+          port = 8000
+        }
+        initial_delay_seconds = 60
+        timeout_seconds       = 30
+        period_seconds        = 10
+        failure_threshold     = 30
+      }
+
+      env {
+        name  = "GCP_PROJECT_ID"
+        value = var.project_id
+      }
+
+      env {
+        name  = "ENVIRONMENT"
+        value = "production"
+      }
+
+      env {
+        name  = "PORT"
+        value = "8000"
+      }
+    }
+  }
+
+  depends_on = [
+    google_project_service.apis,
     google_vpc_access_connector.voicecast_connector
   ]
 
