@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { storageService } from "@/lib/storage";
 
 // GET - Fetch voices
 export async function GET(request: NextRequest) {
@@ -86,7 +87,30 @@ export async function GET(request: NextRequest) {
             _count: undefined
         }));
 
-        return NextResponse.json(voicesWithSavedStatus);
+        // Convert gs:// URLs to signed URLs
+        const voicesWithSignedUrls = await Promise.all(
+            voicesWithSavedStatus.map(async (voice) => {
+                let audioSample = voice.audioSample;
+
+                if (audioSample?.startsWith('gs://')) {
+                    try {
+                        console.log('Original audioSample:', audioSample);
+                        audioSample = await storageService.getSignedUrl(audioSample, 3600);
+                        console.log('Generated signed URL:', audioSample);
+                    } catch (error) {
+                        console.error('Error generating signed URL for voice audio:', error);
+                        console.error('Error details:', error);
+                    }
+                }
+
+                return {
+                    ...voice,
+                    audioSample
+                };
+            })
+        );
+
+        return NextResponse.json(voicesWithSignedUrls);
     } catch (error) {
         console.error('Error fetching voices:', error);
         return NextResponse.json(

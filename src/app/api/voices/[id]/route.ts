@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { unlink } from 'fs/promises';
-import { join } from 'path';
+import { storageService } from "@/lib/storage";
 
-// GET - Fetch individual voice
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -36,12 +34,23 @@ export async function GET(
             return NextResponse.json({ message: 'Voice not found' }, { status: 404 });
         }
 
-        // Check if the user has access to this voice
         if (!voice.isPublic && voice.userId !== session?.user?.id) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
-        return NextResponse.json(voice);
+        let processedVoice = { ...voice };
+        if (voice.audioSample?.startsWith('gs://')) {
+            try {
+                console.log('Original audioSample:', voice.audioSample);
+                processedVoice.audioSample = await storageService.getSignedUrl(voice.audioSample, 3600);
+                console.log('Generated signed URL:', processedVoice.audioSample);
+            } catch (error) {
+                console.error('Error generating signed URL for voice audio:', error);
+                console.error('Error details:', error);
+            }
+        }
+
+        return NextResponse.json(processedVoice);
     } catch (error) {
         console.error('Error fetching voice:', error);
         return NextResponse.json(
@@ -51,7 +60,6 @@ export async function GET(
     }
 }
 
-// PUT - Update voice
 export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -65,7 +73,7 @@ export async function PUT(
 
     try {
         const body = await request.json();
-        const { name, description, isPublic, genreId, gender, duration } = body; // ADD: Accept duration
+        const { name, description, isPublic, genreId, gender, duration } = body;
 
         const voice = await prisma.voice.findUnique({
             where: { id }
@@ -75,7 +83,6 @@ export async function PUT(
             return NextResponse.json({ message: 'Voice not found' }, { status: 404 });
         }
 
-        // Check if the user owns this voice
         if (voice.userId !== session.user.id) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
         }
@@ -88,7 +95,7 @@ export async function PUT(
                 ...(isPublic !== undefined && { isPublic }),
                 ...(genreId !== undefined && { genreId: genreId || null }),
                 ...(gender !== undefined && { gender: gender || null }),
-                ...(duration !== undefined && { duration }) // ADD: Allow duration updates
+                ...(duration !== undefined && { duration })
             },
             select: {
                 id: true,
@@ -96,7 +103,7 @@ export async function PUT(
                 description: true,
                 isPublic: true,
                 audioSample: true,
-                duration: true, // ADD: Include duration in response
+                duration: true,
                 gender: true,
                 createdAt: true,
                 updatedAt: true,
@@ -110,7 +117,16 @@ export async function PUT(
             }
         });
 
-        return NextResponse.json(updatedVoice);
+        let processedUpdatedVoice = { ...updatedVoice };
+        if (updatedVoice.audioSample?.startsWith('gs://')) {
+            try {
+                processedUpdatedVoice.audioSample = await storageService.getSignedUrl(updatedVoice.audioSample, 3600);
+            } catch (error) {
+                console.error('Error generating signed URL for updated voice:', error);
+            }
+        }
+
+        return NextResponse.json(processedUpdatedVoice);
     } catch (error) {
         console.error('Error updating voice:', error);
         return NextResponse.json(
@@ -120,7 +136,6 @@ export async function PUT(
     }
 }
 
-// PATCH - Update voice metadata (for the edit form)
 export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -128,7 +143,6 @@ export async function PATCH(
     return PUT(request, { params });
 }
 
-// DELETE - Delete voice
 export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -149,25 +163,19 @@ export async function DELETE(
             return NextResponse.json({ message: 'Voice not found' }, { status: 404 });
         }
 
-        // Check if the user owns this voice
         if (voice.userId !== session.user.id) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
         }
 
-        // Delete the voice from database
         await prisma.voice.delete({
             where: { id }
         });
 
-        // Delete the associated audio file if it's a local upload
-        if (voice.audioSample && voice.audioSample.startsWith('/uploads/')) {
+        if (voice.audioSample && voice.audioSample.startsWith('gs://')) {
             try {
-                const filename = voice.audioSample.replace('/uploads/', '');
-                const filepath = join(process.cwd(), 'public', 'uploads', filename);
-                await unlink(filepath);
+                await storageService.deleteFile(voice.audioSample);
             } catch (fileError) {
                 console.warn('Could not delete audio file:', fileError);
-                // Continue anyway - the database record is deleted
             }
         }
 

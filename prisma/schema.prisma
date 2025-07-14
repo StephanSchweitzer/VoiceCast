@@ -14,14 +14,14 @@ model User {
   email           String           @unique
   password        String
   image           String?
-  role            String           @default("user")
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
-  voices          Voice[]
-  savedVoices     SavedVoice[]
+  role            String           @default("user")
   generatedAudios GeneratedAudio[]
+  savedVoices     SavedVoice[]
   speakSessions   SpeakSession[]
   preferences     UserPreferences?
+  voices          Voice[]
 }
 
 model Genre {
@@ -36,17 +36,17 @@ model Voice {
   name            String
   description     String?
   audioSample     String
-  duration        Float?
   isPublic        Boolean          @default(false)
   gender          String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   userId          String
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   genreId         String?
-  genre           Genre?           @relation(fields: [genreId], references: [id])
-  savedBy         SavedVoice[]
+  duration        Float?
   generatedAudios GeneratedAudio[]
+  savedBy         SavedVoice[]
+  genre           Genre?           @relation(fields: [genreId], references: [id])
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SavedVoice {
@@ -54,9 +54,8 @@ model SavedVoice {
   userId    String
   voiceId   String
   createdAt DateTime @default(now())
-
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  voice Voice @relation(fields: [voiceId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voice     Voice    @relation(fields: [voiceId], references: [id], onDelete: Cascade)
 
   @@unique([userId, voiceId])
 }
@@ -68,28 +67,26 @@ model SpeakSession {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   generatedAudios GeneratedAudio[]
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, updatedAt])
 }
 
 model GeneratedAudio {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   userId    String
   voiceId   String
-  sessionId String
   text      String
   emotion   String
   arousal   Float
   valence   Float
   filePath  String
   isLiked   Boolean?
-  createdAt DateTime @default(now())
-
-  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  voice   Voice        @relation(fields: [voiceId], references: [id], onDelete: Cascade)
-  session SpeakSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  sessionId String
+  session   SpeakSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voice     Voice        @relation(fields: [voiceId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([sessionId, createdAt])
@@ -99,6 +96,5 @@ model UserPreferences {
   id       String  @id @default(cuid())
   userId   String  @unique
   autoPlay Boolean @default(true)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

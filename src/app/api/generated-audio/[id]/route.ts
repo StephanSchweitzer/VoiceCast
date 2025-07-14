@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { unlink } from 'fs/promises';
-import { join } from 'path';
+import { storageService} from "@/lib/storage";
 
 export async function PATCH(
     request: NextRequest,
@@ -103,15 +102,11 @@ export async function DELETE(
             where: { id }
         });
 
-        // Delete the generated audio file from public/generated-audios/
-        if (generatedAudio.filePath && !generatedAudio.filePath.startsWith('http')) {
+        if (generatedAudio.filePath && generatedAudio.filePath.startsWith('gs://')) {
             try {
-                // Construct the full path to the generated audio file
-                const fullPath = join(process.cwd(), 'public', generatedAudio.filePath);
-                await unlink(fullPath);
+                await storageService.deleteFile(generatedAudio.filePath);
             } catch (fileError) {
                 console.warn('Could not delete generated audio file:', fileError);
-                // Don't fail the request if file deletion fails
             }
         }
 

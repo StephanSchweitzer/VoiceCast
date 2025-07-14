@@ -11,3 +11,4 @@ terraform/terraform.tfvars
 terraform/.terraform/
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
+service-account-key.json

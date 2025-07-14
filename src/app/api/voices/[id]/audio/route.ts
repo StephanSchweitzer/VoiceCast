@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { unlink } from 'fs/promises';
-import { join } from 'path';
+import { storageService} from "@/lib/storage";
 
 // PATCH - Update voice audio sample
 export async function PATCH(
@@ -71,15 +70,11 @@ export async function PATCH(
             }
         });
 
-        // Clean up old audio file if it was a local upload
-        if (oldAudioSample && oldAudioSample.startsWith('/uploads/') && oldAudioSample !== audioSample) {
+        if (oldAudioSample && oldAudioSample.startsWith('gs://') && oldAudioSample !== audioSample) {
             try {
-                const filename = oldAudioSample.replace('/uploads/', '');
-                const filepath = join(process.cwd(), 'public', 'uploads', filename);
-                await unlink(filepath);
+                await storageService.deleteFile(oldAudioSample);
             } catch (fileError) {
                 console.warn('Could not delete old audio file:', fileError);
-                // Continue anyway - the new audio sample is updated
             }
         }
 

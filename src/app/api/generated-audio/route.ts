@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { unlink, writeFile, mkdir, readFile } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { storageService} from "@/lib/storage";
 
 const EMOTION_MAPPINGS = {
     neutral: { arousal: 0.5, valence: 0.5 },
@@ -68,8 +66,44 @@ export async function GET(request: NextRequest) {
         const audios = hasMore ? generatedAudios.slice(0, -1) : generatedAudios;
         const nextCursor = hasMore ? audios[audios.length - 1].id : null;
 
+        const audiosWithUrls = await Promise.all(
+            audios.map(async (audio) => {
+                let filePath = audio.filePath;
+                let voiceAudioSample = audio.voice.audioSample;
+
+                if (filePath?.startsWith('gs://')) {
+                    try {
+                        console.log('Original filePath:', filePath);
+                        filePath = await storageService.getSignedUrl(filePath, 3600);
+                        console.log('Generated signed URL:', filePath);
+                    } catch (error) {
+                        console.error('Error generating signed URL for audio:', error);
+                        console.error('Error details:', error);
+                        // You might want to return an error here instead of sending gs:// URL
+                    }
+                }
+
+                if (voiceAudioSample?.startsWith('gs://')) {
+                    try {
+                        voiceAudioSample = await storageService.getSignedUrl(voiceAudioSample, 3600);
+                    } catch (error) {
+                        console.error('Error generating signed URL for voice:', error);
+                    }
+                }
+
+                return {
+                    ...audio,
+                    filePath,
+                    voice: {
+                        ...audio.voice,
+                        audioSample: voiceAudioSample
+                    }
+                };
+            })
+        );
+
         return NextResponse.json({
-            audios,
+            audios: audiosWithUrls,
             hasMore,
             nextCursor
         });
@@ -106,7 +140,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Verify session belongs to user
         const speakSession = await prisma.speakSession.findUnique({
             where: { id: sessionId }
         });
@@ -149,9 +182,7 @@ export async function POST(request: NextRequest) {
 
         const { arousal, valence } = EMOTION_MAPPINGS[emotion as keyof typeof EMOTION_MAPPINGS];
 
-        // Get the voice sample audio for voice cloning
-        const audioPath = join(process.cwd(), 'public', voice.audioSample);
-        const audioBuffer = await readFile(audioPath);
+        const audioBuffer = await storageService.readFile(voice.audioSample);
         const audioSampleData = audioBuffer.toString('base64');
 
         // TODO: Replace '/api/tts-mock' with '/api/tts' when ready for production
@@ -178,23 +209,11 @@ export async function POST(request: NextRequest) {
             throw new Error('No audio data received from TTS service');
         }
 
-        // Create the generated-audios directory if it doesn't exist
-        const generatedAudiosDir = join(process.cwd(), 'public', 'generated-audios');
-        if (!existsSync(generatedAudiosDir)) {
-            await mkdir(generatedAudiosDir, { recursive: true });
-        }
-
-        // Generate filename and save the audio
         const filename = `${Date.now()}_${Math.random().toString(36).substring(2)}.wav`;
-        const fullLocalPath = join(generatedAudiosDir, filename);
-
         const buffer = Buffer.from(ttsResult.audioData, 'base64');
-        await writeFile(fullLocalPath, buffer);
-        const localFilePath = `/generated-audios/${filename}`;
+        const bucketFilePath = await storageService.uploadGeneratedAudio(buffer, filename);
 
-        // Save to database with session ID and update session updatedAt
         const generatedAudio = await prisma.$transaction(async (tx) => {
-            // Create the generated audio
             const audio = await tx.generatedAudio.create({
                 data: {
                     userId: session.user.id,
@@ -204,7 +223,7 @@ export async function POST(request: NextRequest) {
                     emotion,
                     arousal,
                     valence,
-                    filePath: localFilePath
+                    filePath: bucketFilePath // Store bucket path in DB
                 },
                 include: {
                     voice: {
@@ -223,7 +242,6 @@ export async function POST(request: NextRequest) {
                 }
             });
 
-            // Update session's updatedAt timestamp
             await tx.speakSession.update({
                 where: { id: sessionId },
                 data: { updatedAt: new Date() }
@@ -232,7 +250,32 @@ export async function POST(request: NextRequest) {
             return audio;
         });
 
-        return NextResponse.json(generatedAudio, { status: 201 });
+        let responseFilePath = generatedAudio.filePath;
+        if (responseFilePath?.startsWith('gs://')) {
+            try {
+                responseFilePath = await storageService.getSignedUrl(responseFilePath, 3600);
+            } catch (error) {
+                console.error('Error generating signed URL for response:', error);
+            }
+        }
+
+        let voiceAudioSample = generatedAudio.voice.audioSample;
+        if (voiceAudioSample?.startsWith('gs://')) {
+            try {
+                voiceAudioSample = await storageService.getSignedUrl(voiceAudioSample, 3600);
+            } catch (error) {
+                console.error('Error generating signed URL for voice:', error);
+            }
+        }
+
+        return NextResponse.json({
+            ...generatedAudio,
+            filePath: responseFilePath,
+            voice: {
+                ...generatedAudio.voice,
+                audioSample: voiceAudioSample
+            }
+        }, { status: 201 });
     } catch (error) {
         console.error('Error generating audio:', error);
         const errorMessage = error instanceof Error ? error.message : 'Failed to generate audio';

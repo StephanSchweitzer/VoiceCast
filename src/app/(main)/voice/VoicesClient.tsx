@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import VoicesSearch from './components/VoicesSearch';
 import VoicesList from './components/VoicesList';
+import Link from 'next/link';
 
 // Type based on your existing API response
 interface VoiceLibraryItem {
@@ -132,41 +133,51 @@ export default function VoicesClient({ userId }: VoicesClientProps) {
     return (
         <div className="overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 shadow">
             <div className="px-4 py-5 sm:p-6 space-y-6">
-                {/* Filter Tabs - Mobile Optimized */}
+                {/* Filter Tabs with Create Button - Mobile Optimized */}
                 <div className="border-b border-gray-200 dark:border-gray-700">
-                    <nav className="-mb-px flex space-x-1 sm:space-x-4 lg:space-x-8 overflow-x-auto">
-                        {[
-                            {
-                                key: 'all',
-                                label: `All Voices (${voices.length})`,
-                                shortLabel: `All (${voices.length})`
-                            },
-                            {
-                                key: 'uploaded',
-                                label: `My Uploads (${uploadedCount})`,
-                                shortLabel: `Mine (${uploadedCount})`
-                            },
-                            {
-                                key: 'saved',
-                                label: `Saved Voices (${savedCount})`,
-                                shortLabel: `Saved (${savedCount})`
-                            }
-                        ].map((tab) => (
-                            <button
-                                key={tab.key}
-                                onClick={() => handleFilterChange(tab.key as any)}
-                                className={`flex-shrink-0 whitespace-nowrap py-2 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors ${
-                                    activeFilter === tab.key
-                                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                                }`}
-                            >
-                                {/* Show short labels on mobile, full labels on larger screens */}
-                                <span className="sm:hidden">{tab.shortLabel}</span>
-                                <span className="hidden sm:inline">{tab.label}</span>
-                            </button>
-                        ))}
-                    </nav>
+                    <div className="flex justify-between items-center">
+                        <nav className="-mb-px flex space-x-1 sm:space-x-4 lg:space-x-8 overflow-x-auto">
+                            {[
+                                {
+                                    key: 'all',
+                                    label: `All Voices (${voices.length})`,
+                                    shortLabel: `All (${voices.length})`
+                                },
+                                {
+                                    key: 'uploaded',
+                                    label: `My Uploads (${uploadedCount})`,
+                                    shortLabel: `Mine (${uploadedCount})`
+                                },
+                                {
+                                    key: 'saved',
+                                    label: `Saved Voices (${savedCount})`,
+                                    shortLabel: `Saved (${savedCount})`
+                                }
+                            ].map((tab) => (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => handleFilterChange(tab.key as any)}
+                                    className={`flex-shrink-0 whitespace-nowrap py-2 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors ${
+                                        activeFilter === tab.key
+                                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                                    }`}
+                                >
+                                    {/* Show short labels on mobile, full labels on larger screens */}
+                                    <span className="sm:hidden">{tab.shortLabel}</span>
+                                    <span className="hidden sm:inline">{tab.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+
+                        {/* Create New Voice Button */}
+                        <Link
+                            href="/voice/new"
+                            className="flex-shrink-0 ml-6 px-6 py-2 -mb-px bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                            Create New Voice
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Search */}

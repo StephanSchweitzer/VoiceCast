@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
 import { randomUUID } from 'crypto';
-import fs from 'fs/promises';
+import { storageService } from '@/lib/storage'; // Import your storage utility
 
 export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
@@ -16,7 +14,7 @@ export async function POST(request: NextRequest) {
     try {
         const formData = await request.formData();
         const audioFile = formData.get('audio') as File;
-        const duration = formData.get('duration'); // ADD: Extract duration from FormData
+        const duration = formData.get('duration');
 
         if (!audioFile) {
             return NextResponse.json(
@@ -25,7 +23,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Check if the file is an audio file
         if (!audioFile.type.includes('audio/')) {
             return NextResponse.json(
                 { message: 'File must be an audio file' },
@@ -33,7 +30,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Check file size (10MB limit)
         const maxSize = 10 * 1024 * 1024; // 10MB
         if (audioFile.size > maxSize) {
             return NextResponse.json(
@@ -42,29 +38,19 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Save the file
         const bytes = await audioFile.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
-        // Create a unique filename
         const ext = audioFile.name.split('.').pop() || 'wav';
         const filename = `${randomUUID()}.${ext}`;
-        const uploadDir = join(process.cwd(), 'public', 'uploads');
-        const filepath = join(uploadDir, filename);
 
-        // Ensure the directory exists
-        await ensureDir(uploadDir);
+        const filePath = await storageService.uploadReferenceAudio(buffer, filename);
 
-        // Write the file to disk
-        await writeFile(filepath, buffer);
-
-        // UPDATED: Build response object with optional duration
         const response: any = {
-            url: `/uploads/${filename}`,
+            url: filePath,
             filename: filename
         };
 
-        // ADD: Include duration in response if provided (for recordings)
         if (duration) {
             response.duration = parseFloat(duration as string);
         }
@@ -76,13 +62,5 @@ export async function POST(request: NextRequest) {
             { message: 'Failed to upload audio' },
             { status: 500 }
         );
-    }
-}
-
-async function ensureDir(dirPath: string) {
-    try {
-        await fs.access(dirPath);
-    } catch (error) {
-        await fs.mkdir(dirPath, { recursive: true });
     }
 }
