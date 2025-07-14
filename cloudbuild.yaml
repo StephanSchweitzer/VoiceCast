@@ -39,6 +39,36 @@ steps:
           echo "BUILD_TTS=false" >> /workspace/build_flags.txt
         fi
 
+  - name: 'gcr.io/cloud-builders/bash'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Final build check - ensuring critical images exist..."
+        
+        # If NextJS not set to build, double-check the image exists
+        if ! grep -q "BUILD_NEXTJS=true" /workspace/build_flags.txt; then
+          if ! gcloud artifacts docker images describe "${_NEXTJS_IMAGE_URL}:latest" >/dev/null 2>&1; then
+            echo "WARNING: NextJS image missing despite no file changes. Force building."
+            sed -i 's/BUILD_NEXTJS=false/BUILD_NEXTJS=true/' /workspace/build_flags.txt
+          else
+            echo "NextJS image exists, skipping build"
+          fi
+        fi
+        
+        # Same check for TTS
+        if ! grep -q "BUILD_TTS=true" /workspace/build_flags.txt; then
+          if ! gcloud artifacts docker images describe "${_TTS_IMAGE_URL}:latest" >/dev/null 2>&1; then
+            echo "WARNING: TTS image missing despite no file changes. Force building."
+            sed -i 's/BUILD_TTS=false/BUILD_TTS=true/' /workspace/build_flags.txt
+          else
+            echo "TTS image exists, skipping build"
+          fi
+        fi
+        
+        echo "Final build flags:"
+        cat /workspace/build_flags.txt
+
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     args:
@@ -126,7 +156,7 @@ steps:
     args:
       - '-c'
       - |
-        echo "🎉 Deployment completed!"
+        echo "Deployment completed!"
         echo "Build flags:"
         cat /workspace/build_flags.txt
         echo "Services deployed based on changed files."
