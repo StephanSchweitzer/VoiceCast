@@ -1,4 +1,3 @@
-# Store GitHub token in Secret Manager
 resource "google_secret_manager_secret" "github_token_secret" {
   project   = var.project_id
   secret_id = "github-pat-token"
@@ -72,14 +71,15 @@ resource "google_cloudbuild_trigger" "voicecast_build" {
     }
   }
 
-  included_files = var.app_file_patterns
+  included_files = concat(var.app_file_patterns, var.api_file_patterns)
   ignored_files  = var.ignored_file_patterns
 
   filename = "cloudbuild.yaml"
 
   substitutions = {
-    _IMAGE_URL = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.voicecast_repo.name}/${var.app_name}-app"
-    _REGION    = var.region
+    _NEXTJS_IMAGE_URL = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.voicecast_repo.name}/${var.app_name}-app"
+    _TTS_IMAGE_URL    = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.voicecast_repo.name}/${var.app_name}-tts"
+    _REGION           = var.region
   }
 
   disabled = !var.trigger_on_push
@@ -130,8 +130,9 @@ resource "google_project_iam_member" "cloudbuild_storage" {
 
 resource "null_resource" "trigger_initial_build" {
   triggers = {
-    image_url = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.voicecast_repo.name}/${var.app_name}-app:latest"
-    trigger_id = google_cloudbuild_trigger.voicecast_build.id
+    nextjs_image_url = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.voicecast_repo.name}/${var.app_name}-app:latest"
+    tts_image_url    = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.voicecast_repo.name}/${var.app_name}-tts:latest"
+    trigger_id       = google_cloudbuild_trigger.voicecast_build.id
   }
 
   provisioner "local-exec" {

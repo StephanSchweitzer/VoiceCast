@@ -70,7 +70,7 @@ variable "api_file_patterns" {
   description = "File patterns that should trigger API (backend) rebuilds"
   type        = list(string)
   default = [
-    "inference_api/**",
+    "tts_api/**",
   ]
 }
 
