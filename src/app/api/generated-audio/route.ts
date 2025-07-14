@@ -186,7 +186,8 @@ export async function POST(request: NextRequest) {
         const audioSampleData = audioBuffer.toString('base64');
 
         // TODO: Replace '/api/tts-mock' with '/api/tts' when ready for production
-        const ttsResponse = await fetch(new URL('/api/tts-mock', request.nextUrl), {
+        const baseUrl = request.nextUrl.origin;
+        const ttsResponse = await fetch(`${baseUrl}/api/tts-mock`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -1,7 +1,7 @@
 import { Storage } from '@google-cloud/storage';
 
 const storage = new Storage({
-    projectId: process.env.GCP_PROJECT_ID,
+    projectId: process.env.GOOGLE_CLOUD_PROJECT || process.env.GCP_PROJECT_ID,
 });
 
 const REFERENCE_AUDIO_BUCKET = process.env.REFERENCE_AUDIO_BUCKET!;
