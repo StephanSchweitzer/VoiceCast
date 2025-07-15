@@ -5,12 +5,6 @@ import { prisma } from '@/lib/db';
 import { storageService} from "@/lib/storage";
 import { GoogleAuth } from 'google-auth-library';
 
-interface TTSApiResponse {
-    success: boolean;
-    audioData?: string;
-    error?: string;
-}
-
 const EMOTION_MAPPINGS = {
     neutral: { arousal: 0.5, valence: 0.5 },
     happy: { arousal: 0.8, valence: 0.8 },
@@ -191,6 +185,14 @@ export async function POST(request: NextRequest) {
 
         const audioBuffer = await storageService.readFile(voice.audioSample);
 
+        console.log('Audio buffer length:', audioBuffer.length);
+        console.log('First few bytes:', audioBuffer.slice(0, 16));
+        console.log('Audio buffer type:', typeof audioBuffer);
+        console.log('Audio buffer constructor:', audioBuffer.constructor.name);
+
+        const header = audioBuffer.slice(0, 4).toString();
+        console.log('File header:', header);
+
         // Get the auth token
         const auth = new GoogleAuth({
             scopes: ['https://www.googleapis.com/auth/cloud-platform']
@@ -234,14 +236,14 @@ export async function POST(request: NextRequest) {
             throw new Error(`TTS API error: ${ttsResponse.status} - ${errorText}`);
         }
 
-        const ttsResult = await ttsResponse.json() as TTSApiResponse;
+        // Handle binary WAV response directly
+        const audioArrayBuffer = await ttsResponse.arrayBuffer();
+        const buffer = Buffer.from(audioArrayBuffer);
 
-        if (!ttsResult.success || !ttsResult.audioData) {
-            throw new Error(ttsResult.error || 'No audio data received from TTS service');
-        }
+        console.log('Received audio buffer length:', buffer.length);
+        console.log('Audio buffer header:', buffer.slice(0, 4).toString());
 
         const filename = `${Date.now()}_${Math.random().toString(36).substring(2)}.wav`;
-        const buffer = Buffer.from(ttsResult.audioData, 'base64');
         const bucketFilePath = await storageService.uploadGeneratedAudio(buffer, filename);
 
         const generatedAudio = await prisma.$transaction(async (tx) => {
