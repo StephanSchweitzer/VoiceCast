@@ -67,10 +67,10 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
           path = "/"
           port = 3000
         }
-        initial_delay_seconds = 20
-        timeout_seconds = 10
-        period_seconds = 5
-        failure_threshold = 10
+        initial_delay_seconds = 60
+        timeout_seconds = 5
+        period_seconds = 15
+        failure_threshold = 15
       }
 
       env {
