@@ -136,7 +136,7 @@ options:
   diskSizeGb: 100
   logging: 'CLOUD_LOGGING_ONLY'
 
-timeout: '1200s'
+timeout: '1800s'
 
 substitutions:
   _NEXTJS_IMAGE_URL: 'europe-west1-docker.pkg.dev/voicecast-464815/voicecast/voicecast-app'
