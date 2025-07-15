@@ -139,6 +139,7 @@ class ValenceArousalXTTS(nn.Module):
             print(f"Local model not found: {e}")
             print("Falling back to TTS API...")
 
+            #This may be downloading xtts twice
             try:
                 from TTS.api import TTS
                 # Disable progress bar to avoid download issues with proxy

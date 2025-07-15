@@ -147,7 +147,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Store the voice in the database
         const voice = await prisma.voice.create({
             data: {
                 name,
