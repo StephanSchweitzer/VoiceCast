@@ -31,7 +31,7 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
 
   template {
     scaling {
-      min_instance_count = 0
+      min_instance_count = 1
       max_instance_count = 10
     }
 
@@ -60,6 +60,17 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
           memory = "2Gi"
         }
         cpu_idle = true
+      }
+
+      startup_probe {
+        http_get {
+          path = "/"
+          port = 3000
+        }
+        initial_delay_seconds = 20
+        timeout_seconds = 10
+        period_seconds = 5
+        failure_threshold = 10
       }
 
       env {

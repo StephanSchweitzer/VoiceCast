@@ -185,63 +185,45 @@ export async function POST(request: NextRequest) {
 
         const audioBuffer = await storageService.readFile(voice.audioSample);
 
-        console.log('Audio buffer length:', audioBuffer.length);
-        console.log('First few bytes:', audioBuffer.slice(0, 16));
-        console.log('Audio buffer type:', typeof audioBuffer);
-        console.log('Audio buffer constructor:', audioBuffer.constructor.name);
-
-        const header = audioBuffer.slice(0, 4).toString();
-        console.log('File header:', header);
-
-        // Get the auth token
-        const auth = new GoogleAuth({
-            scopes: ['https://www.googleapis.com/auth/cloud-platform']
-        });
-
-        const authClient = await auth.getClient();
-        const accessToken = await authClient.getAccessToken();
-
-        if (!accessToken || !accessToken.token) {
-            throw new Error('Failed to get access token');
+        const ttsApiUrl = process.env.TTS_API_URL;
+        if (!ttsApiUrl) {
+            throw new Error('TTS_API_URL environment variable not configured');
         }
 
-        // Create FormData with the audio file
+        const auth = new GoogleAuth();
+        const idTokenClient = await auth.getIdTokenClient(ttsApiUrl);
+        const tokenResponse = await idTokenClient.getAccessToken();
+
+        if (!tokenResponse || !tokenResponse.token) {
+            throw new Error('Failed to get ID token for Cloud Run authentication');
+        }
+
         const formData = new FormData();
         formData.append('text', text);
         formData.append('valence', valence.toString());
         formData.append('arousal', arousal.toString());
 
-        // Use Blob instead of File (Node.js 18+ compatible)
         const audioBlob = new Blob([audioBuffer], { type: 'audio/wav' });
         formData.append('reference_audio', audioBlob, 'reference.wav');
 
-        const ttsApiUrl = process.env.TTS_API_URL;
-
-        if (!ttsApiUrl) {
-            throw new Error('TTS_API_URL environment variable not configured');
-        }
-
-        // Use native fetch with the auth token
+        // Use native fetch with the ID token
         const ttsResponse = await fetch(`${ttsApiUrl}/synthesize`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${accessToken.token}`,
-                // Don't set Content-Type - let fetch set it with boundary for multipart
+                'Authorization': `Bearer ${tokenResponse.token}`,
             },
             body: formData
         });
 
         if (!ttsResponse.ok) {
             const errorText = await ttsResponse.text();
+            console.error('TTS API Response:', errorText);
             throw new Error(`TTS API error: ${ttsResponse.status} - ${errorText}`);
         }
 
         // Handle binary WAV response directly
         const audioArrayBuffer = await ttsResponse.arrayBuffer();
         const buffer = Buffer.from(audioArrayBuffer);
-
-        console.log('Received audio buffer length:', buffer.length);
-        console.log('Audio buffer header:', buffer.slice(0, 4).toString());
 
         const filename = `${Date.now()}_${Math.random().toString(36).substring(2)}.wav`;
         const bucketFilePath = await storageService.uploadGeneratedAudio(buffer, filename);
