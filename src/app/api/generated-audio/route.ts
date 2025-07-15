@@ -211,9 +211,9 @@ export async function POST(request: NextRequest) {
         formData.append('valence', valence.toString());
         formData.append('arousal', arousal.toString());
 
-        // Create a proper File object from the buffer
-        const audioFile = new File([audioBuffer], 'reference.wav', { type: 'audio/wav' });
-        formData.append('reference_audio', audioFile);
+        // Use Blob instead of File (Node.js 18+ compatible)
+        const audioBlob = new Blob([audioBuffer], { type: 'audio/wav' });
+        formData.append('reference_audio', audioBlob, 'reference.wav');
 
         const ttsApiUrl = process.env.TTS_API_URL;
 

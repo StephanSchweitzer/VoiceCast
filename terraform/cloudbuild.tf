@@ -57,9 +57,10 @@ resource "google_cloudbuildv2_repository" "voicecast_repo_connection" {
   remote_uri        = "https://github.com/${var.github_repo_owner}/${var.github_repo_name}.git"
 }
 
-resource "google_cloudbuild_trigger" "voicecast_build" {
+# App Build Trigger
+resource "google_cloudbuild_trigger" "app_build" {
   project  = var.project_id
-  name     = "${var.app_name}-build-trigger"
+  name     = "${var.app_name}-app-trigger"
   location = var.region
 
   service_account = google_service_account.cloudbuild_sa.id
@@ -71,15 +72,49 @@ resource "google_cloudbuild_trigger" "voicecast_build" {
     }
   }
 
-  included_files = concat(var.app_file_patterns, var.api_file_patterns)
-  ignored_files  = var.ignored_file_patterns
+  # Only trigger when app files change
+  included_files = var.app_file_patterns
 
-  filename = "cloudbuild.yaml"
+  filename = "cloudbuild-app.yaml"
 
   substitutions = {
     _NEXTJS_IMAGE_URL = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.voicecast_repo.name}/${var.app_name}-app"
-    _TTS_IMAGE_URL    = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.voicecast_repo.name}/${var.app_name}-tts"
     _REGION           = var.region
+  }
+
+  disabled = !var.trigger_on_push
+
+  depends_on = [
+    google_project_service.apis,
+    google_artifact_registry_repository.voicecast_repo,
+    google_cloudbuildv2_repository.voicecast_repo_connection,
+    google_service_account.cloudbuild_sa
+  ]
+}
+
+# API Build Trigger
+resource "google_cloudbuild_trigger" "api_build" {
+  project  = var.project_id
+  name     = "${var.app_name}-api-trigger"
+  location = var.region
+
+  service_account = google_service_account.cloudbuild_sa.id
+
+  repository_event_config {
+    repository = google_cloudbuildv2_repository.voicecast_repo_connection.id
+    push {
+      branch = "^${var.github_branch}$"
+    }
+  }
+
+  # Only trigger when API files change
+  included_files = var.api_file_patterns
+
+  filename = "cloudbuild-api.yaml"
+
+  substitutions = {
+    _TTS_IMAGE_URL = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.voicecast_repo.name}/${var.app_name}-tts"
+    _REGION        = var.region
   }
 
   disabled = !var.trigger_on_push
@@ -126,21 +161,4 @@ resource "google_project_iam_member" "cloudbuild_storage" {
   project = var.project_id
   role    = "roles/storage.admin"
   member  = "serviceAccount:${google_service_account.cloudbuild_sa.email}"
-}
-
-resource "null_resource" "trigger_initial_build" {
-  triggers = {
-    nextjs_image_url = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.voicecast_repo.name}/${var.app_name}-app:latest"
-    tts_image_url    = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.voicecast_repo.name}/${var.app_name}-tts:latest"
-    trigger_id       = google_cloudbuild_trigger.voicecast_build.id
-  }
-
-  provisioner "local-exec" {
-    command = "gcloud builds triggers run ${google_cloudbuild_trigger.voicecast_build.name} --branch=${var.github_branch} --region=${var.region} --project=${var.project_id}"
-  }
-
-  depends_on = [
-    google_cloudbuild_trigger.voicecast_build,
-    google_artifact_registry_repository.voicecast_repo
-  ]
 }
