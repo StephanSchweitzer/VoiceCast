@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '15');
     const cursor = searchParams.get('cursor');
-    const sessionId = searchParams.get('sessionId'); // Optional filter by session
+    const sessionId = searchParams.get('sessionId');
 
     try {
         const whereClause: { userId: string; sessionId?: string } = {
@@ -80,7 +80,6 @@ export async function GET(request: NextRequest) {
                     } catch (error) {
                         console.error('Error generating signed URL for audio:', error);
                         console.error('Error details:', error);
-                        // You might want to return an error here instead of sending gs:// URL
                     }
                 }
 
@@ -206,7 +205,6 @@ export async function POST(request: NextRequest) {
         const audioBlob = new Blob([audioBuffer], { type: 'audio/wav' });
         formData.append('reference_audio', audioBlob, 'reference.wav');
 
-        // Use native fetch with the ID token
         const ttsResponse = await fetch(`${ttsApiUrl}/synthesize`, {
             method: 'POST',
             headers: {
@@ -221,7 +219,6 @@ export async function POST(request: NextRequest) {
             throw new Error(`TTS API error: ${ttsResponse.status} - ${errorText}`);
         }
 
-        // Handle binary WAV response directly
         const audioArrayBuffer = await ttsResponse.arrayBuffer();
         const buffer = Buffer.from(audioArrayBuffer);
 
@@ -238,7 +235,7 @@ export async function POST(request: NextRequest) {
                     emotion,
                     arousal,
                     valence,
-                    filePath: bucketFilePath // Store bucket path in DB
+                    filePath: bucketFilePath
                 },
                 include: {
                     voice: {
