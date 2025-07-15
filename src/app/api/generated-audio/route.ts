@@ -190,10 +190,12 @@ export async function POST(request: NextRequest) {
         }
 
         const auth = new GoogleAuth();
-        const idTokenClient = await auth.getIdTokenClient(ttsApiUrl);
-        const tokenResponse = await idTokenClient.getAccessToken();
+        const client = await auth.getIdTokenClient(ttsApiUrl);
+        const headers = await client.getRequestHeaders();
+        const authHeader = headers.get('Authorization');
+        const idToken = authHeader?.replace('Bearer ', '');
 
-        if (!tokenResponse || !tokenResponse.token) {
+        if (!idToken) {
             throw new Error('Failed to get ID token for Cloud Run authentication');
         }
 
@@ -208,7 +210,7 @@ export async function POST(request: NextRequest) {
         const ttsResponse = await fetch(`${ttsApiUrl}/synthesize`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${tokenResponse.token}`,
+                'Authorization': `Bearer ${idToken}`,
             },
             body: formData
         });

@@ -89,3 +89,10 @@ resource "google_cloud_run_service_iam_member" "tts_invoker" {
 
   depends_on = [google_project_service.apis]
 }
+
+resource "google_cloud_run_service_iam_member" "tts_invoker_personal" {
+  location = google_cloud_run_v2_service.voicecast_tts.location
+  service  = google_cloud_run_v2_service.voicecast_tts.name
+  role     = "roles/run.invoker"
+  member   = "user:sschweitzer2@myges.fr"
+}
