@@ -1,0 +1,40 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-f', 'tts_api/Dockerfile',
+      '-t', '${_TTS_IMAGE_URL}:latest',
+      '-t', '${_TTS_IMAGE_URL}:${BUILD_ID}',
+      './tts_api'
+    ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_TTS_IMAGE_URL}:latest']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_TTS_IMAGE_URL}:${BUILD_ID}']
+
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: [
+      'run', 'deploy', 'voicecast-tts',
+      '--image', '${_TTS_IMAGE_URL}:latest',
+      '--region', '${_REGION}',
+      '--platform', 'managed',
+      '--quiet'
+    ]
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  diskSizeGb: 100
+  logging: 'CLOUD_LOGGING_ONLY'
+
+timeout: '1600s'
+
+substitutions:
+  _TTS_IMAGE_URL: 'europe-west1-docker.pkg.dev/voicecast-464815/voicecast/voicecast-tts'
+  _REGION: 'europe-west1'
+
+tags:
+  - 'voicecast'
+  - 'api'
+  - 'backend'
