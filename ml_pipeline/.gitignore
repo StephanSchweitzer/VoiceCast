@@ -1,0 +1,89 @@
+# ML Pipeline .gitignore
+
+# Compiled Python files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+ml_pipeline_env/
+
+# Data files
+*.wav
+*.mp3
+*.flac
+*.m4a
+*.ogg
+*.pkl
+*.pt
+*.pth
+*.npz
+*.h5
+
+# Temporary files
+/tmp/
+*.tmp
+*.temp
+temp_*
+
+# Configuration files with sensitive data
+*credentials*.json
+*service-account*.json
+pipeline_config_*.yaml
+
+# Logs
+*.log
+logs/
+/var/log/ml_pipeline/
+
+# Model outputs
+models/
+checkpoints/
+tensorboard_logs/
+training_outputs/
+
+# Data directories
+raw_audio/
+processed_audio/
+datasets/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Terraform files
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+terraform.tfplan
+
+# Cloud function deployment files
+*.zip
+function-source/
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Documentation build files
+docs/_build/
+
+# Cache directories
+.cache/
+.pytest_cache/
+
+# Environment variables
+.env
+.env.local
+.env.production
