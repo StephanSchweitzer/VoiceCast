@@ -55,3 +55,18 @@ trigger_on_push = true
 #   ".gitignore",
 #   "LICENSE"
 # ]
+
+# ML Pipeline Configuration (uncomment to enable)
+# ml_pipeline_enabled = true
+# ml_pipeline_bucket_name = "your-project-ml-pipeline-bucket"
+# vertex_ai_model_name = "voicecast-emotion-model"
+# training_instance_type = "n1-standard-4"
+# gpu_type = "NVIDIA_TESLA_K80"
+# gpu_count = 1
+# preemptible = true
+# cloud_run_max_instances = 10
+# cloud_run_memory = "2Gi"
+# cloud_run_cpu = "1000m"
+# bucket_lifecycle_days = 30
+# allow_public_access = false
+# ml_environment = "dev"

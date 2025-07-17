@@ -46,7 +46,7 @@ resource "google_storage_bucket" "generated_audios" {
 }
 
 resource "google_storage_bucket" "training_datasets" {
-  name          = "${var.project_id}-${var.app_name}-training-datasets"  # Fixed: was "datasets", now "training-datasets" for consistency
+  name          = "${var.project_id}-${var.app_name}-training-datasets" # Fixed: was "datasets", now "training-datasets" for consistency
   location      = var.region
   force_destroy = true
 

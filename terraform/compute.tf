@@ -16,7 +16,7 @@ resource "google_compute_network" "voicecast_vpc" {
 resource "google_vpc_access_connector" "voicecast_connector" {
   name          = "${var.app_name}-connector"
   region        = var.region
-  ip_cidr_range = "10.9.0.0/28"  # Changed from 10.8.0.0/28 to avoid conflict
+  ip_cidr_range = "10.9.0.0/28" # Changed from 10.8.0.0/28 to avoid conflict
   network       = google_compute_network.voicecast_vpc.name
   min_instances = 2
   max_instances = 10
@@ -68,9 +68,9 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
           port = 3000
         }
         initial_delay_seconds = 60
-        timeout_seconds = 5
-        period_seconds = 15
-        failure_threshold = 15
+        timeout_seconds       = 5
+        period_seconds        = 15
+        failure_threshold     = 15
       }
 
       env {
@@ -156,7 +156,7 @@ resource "google_cloud_run_v2_service" "voicecast_app" {
     google_project_service.apis,
     google_sql_database_instance.voicecast_db,
     google_vpc_access_connector.voicecast_connector,
-    google_cloud_run_v2_service.voicecast_tts  # Ensure TTS service exists first
+    google_cloud_run_v2_service.voicecast_tts # Ensure TTS service exists first
   ]
 
   deletion_protection = false
@@ -201,9 +201,9 @@ resource "google_cloud_run_v2_service" "voicecast_tts" {
           port = 8000
         }
         initial_delay_seconds = 60
-        timeout_seconds = 5
-        period_seconds = 10
-        failure_threshold = 30
+        timeout_seconds       = 5
+        period_seconds        = 10
+        failure_threshold     = 30
       }
 
       env {
